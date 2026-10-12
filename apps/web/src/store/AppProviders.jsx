@@ -66,26 +66,38 @@ function AuthProvider({ children }) {
 
 /* ---------- Wounds ---------- */
 function WoundProvider({ children }) {
+  const { user } = useAuth();
+  const userId = user?.id ?? null;
   const [wounds, setWounds] = useState([]);
   const [loading, setLoading] = useState(true);
+  // Akun yang datanya sudah dimuat. Dipakai agar penyimpanan setelah login
+  // menunggu muat ulang selesai, sehingga luka baru tidak tertimpa daftar lama.
+  const [loadedFor, setLoadedFor] = useState(undefined);
 
+  // Muat ulang setiap kali pengguna masuk, keluar, atau berganti akun.
   useEffect(() => {
     let alive = true;
+    setLoading(true);
     woundService
       .list()
       .then((list) => alive && setWounds(list))
       .catch(() => alive && setWounds([]))
-      .finally(() => alive && setLoading(false));
+      .finally(() => {
+        if (!alive) return;
+        setLoading(false);
+        setLoadedFor(userId);
+      });
     return () => {
       alive = false;
     };
-  }, []);
+  }, [userId]);
 
   const value = useMemo(() => {
     const replace = (updated) => setWounds((prev) => prev.map((w) => (w.id === updated.id ? updated : w)));
     return {
       wounds,
       loading,
+      loadedFor,
       getById: (id) => wounds.find((w) => w.id === id),
       async create(input, firstCheckin) {
         let wound = await woundService.create(input);
@@ -126,7 +138,7 @@ function WoundProvider({ children }) {
         setWounds(list);
       },
     };
-  }, [wounds, loading]);
+  }, [wounds, loading, loadedFor]);
 
   return <WoundContext.Provider value={value}>{children}</WoundContext.Provider>;
 }
