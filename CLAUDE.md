@@ -22,6 +22,7 @@ Belum ada linter, test, maupun TypeScript. Kalau menambahkannya, tambahkan juga 
 - Frontend React 19 + Vite 7 + Tailwind CSS v4 di `apps/web`, semua halaman sudah ada (lihat tabel rute di README).
 - Semua data masih mock (`VITE_USE_MOCK_API=true`): luka, akun, dan keranjang disimpan di `localStorage` dengan prefix `lukacare:`.
 - Checkout masih demo, tanpa pembayaran sungguhan.
+- Galeri foto di `/pantau/:id` (`src/components/PhotoGallery.jsx`) dibatasi `MAX_GALLERY_PHOTOS` = 3 per luka, terpisah dari foto catatan harian.
 - Katalog produk di `src/data/products.js` masih contoh dengan nama generik.
 - Backend (`apps/api`: Cloudflare Worker + D1 + R2) belum dibuat. Kontraknya sudah ditulis di `src/services/woundService.js`, `authService.js`, dan README.
 

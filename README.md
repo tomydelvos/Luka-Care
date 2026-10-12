@@ -46,7 +46,7 @@ Di Mac, bisa juga klik kanan `jalankan-lukacare.command` di root repo lalu pilih
 | --- | --- |
 | `/` | Beranda: mulai panduan, luka yang dipantau, P3K dasar, tanda kapan ke dokter |
 | `/panduan` | Alur 6 langkah: tanda bahaya → jenis luka → detail → perawatan (dengan timer) → perlengkapan → simpan untuk dipantau. Bisa langsung ke jenis tertentu dengan `?jenis=lecet\|sayatan\|bakar\|lepuh` |
-| `/pantau`, `/pantau/:id` | Daftar luka, catatan harian (foto, skala nyeri 0–10, kemerahan, cairan, demam), grafik nyeri, perbandingan foto awal vs terbaru |
+| `/pantau`, `/pantau/:id` | Daftar luka, catatan harian (foto, skala nyeri 0–10, kemerahan, cairan, demam), grafik nyeri, perbandingan foto awal vs terbaru, galeri foto (maks. 3 per luka) |
 | `/belanja`, `/keranjang`, `/checkout` | Katalog per kategori, filter `?untuk=<jenis luka>`, keranjang, checkout (mode demo) |
 | `/darurat` | Nomor 119 dan 112, cari faskes terdekat, semua tanda bahaya beserta yang bisa dilakukan |
 | `/masuk`, `/daftar`, `/akun` | Autentikasi, persetujuan data kesehatan, unduh/hapus data |
@@ -86,6 +86,8 @@ PATCH  /wounds/:id
 DELETE /wounds/:id
 POST   /wounds/:id/examinations      catatan harian → tabel wound_examinations
 POST   /uploads/wound-photo          → { uploadUrl, photoUrl }  (presigned URL R2)
+POST   /wounds/:id/photos            { src, at } → Wound   galeri foto, maks. 3 per luka
+DELETE /wounds/:id/photos/:photoId   → Wound
 ```
 
 Respons dibungkus `{ success: true, data: … }` atau `{ success: false, message: "…" }`. Foto dikompres di browser (maks. 720 px, JPEG) sebelum diunggah langsung ke R2, jadi binary foto tidak lewat Worker dan tidak masuk D1.

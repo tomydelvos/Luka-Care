@@ -101,6 +101,16 @@ function WoundProvider({ children }) {
         replace(updated);
         return updated;
       },
+      async addPhotos(id, sources) {
+        const updated = await woundService.addPhotos(id, sources);
+        replace(updated);
+        return updated;
+      },
+      async removePhoto(id, photoId) {
+        const updated = await woundService.removePhoto(id, photoId);
+        replace(updated);
+        return updated;
+      },
       async update(id, patch) {
         const updated = await woundService.update(id, patch);
         replace(updated);

@@ -4,6 +4,7 @@ import { Link, useRouter } from "../lib/router";
 import { Badge, Banner, Button, Sheet } from "../components/ui";
 import { WoundArt } from "../components/art";
 import { CheckInSheet, PainChart } from "../components/monitor";
+import { PhotoGallery } from "../components/PhotoGallery";
 import { ProductRow, ProductSheet } from "../components/shop";
 import { woundStatus } from "../components/WoundRow";
 import { WOUND_GUIDES, MONITOR_SIGNS } from "../data/woundGuides";
@@ -185,6 +186,10 @@ export default function WoundDetail({ id }) {
             <p className="text-[15px] text-muted">Grafik muncul setelah ada dua catatan atau lebih.</p>
           )}
         </Panel>
+      </div>
+
+      <div className="mt-4">
+        <PhotoGallery wound={wound} />
       </div>
 
       <div className="mt-4 grid gap-4 lg:grid-cols-2">
