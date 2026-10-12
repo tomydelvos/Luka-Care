@@ -13,6 +13,8 @@ npm run build:staging    # pakai .env.staging
 npm run deploy:staging   # wrangler → staging.lukacare.com
 ```
 
+Di Mac tanpa Terminal: klik kanan `jalankan-lukacare.command` di root repo → Open. Skrip mengecek Node.js ≥ 20, menjalankan `npm install` sekali, lalu `npm run dev -- --open`.
+
 Belum ada linter, test, maupun TypeScript. Kalau menambahkannya, tambahkan juga script-nya di `package.json` dan perbarui bagian ini.
 
 ## Status saat ini

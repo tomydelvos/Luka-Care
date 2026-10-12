@@ -36,7 +36,9 @@ npm install
 npm run dev
 ```
 
-Buka http://localhost:3001. Tanpa backend pun semua fitur jalan, karena `VITE_USE_MOCK_API=true` menyimpan data di `localStorage` browser. Di halaman **Pantau**, tombol "Lihat dengan data contoh" mengisi dua luka contoh untuk mencoba tampilan pemantauan.
+Buka http://localhost:3001.
+
+Di Mac, bisa juga klik kanan `jalankan-lukacare.command` di root repo lalu pilih **Open** (pertama kali) atau klik dua kali (selanjutnya). Skrip ini memasang dependency bila perlu, lalu membuka browser otomatis. Biarkan jendela Terminal-nya terbuka; tekan Ctrl+C untuk berhenti. Tanpa backend pun semua fitur jalan, karena `VITE_USE_MOCK_API=true` menyimpan data di `localStorage` browser. Di halaman **Pantau**, tombol "Lihat dengan data contoh" mengisi dua luka contoh untuk mencoba tampilan pemantauan.
 
 ## Halaman
 
