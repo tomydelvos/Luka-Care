@@ -264,6 +264,18 @@ export function Badge({ tone = "neutral", children, className }) {
   );
 }
 
+/* ---------- Petunjuk isian yang kurang ---------- */
+// Dipasang di atas tombol yang masih nonaktif, supaya pengguna tahu apa yang perlu diisi.
+export function MissingHint({ items, className }) {
+  const list = items.filter(Boolean);
+  if (!list.length) return null;
+  return (
+    <p className={cx("mb-2.5 text-center text-sm text-muted", className)} aria-live="polite">
+      Lengkapi dulu: {list.join(", ")}.
+    </p>
+  );
+}
+
 /* ---------- Page heading ---------- */
 export function PageHeader({ title, lead, action }) {
   return (

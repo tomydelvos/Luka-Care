@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { LuCamera, LuTrash2, LuRefreshCw } from "react-icons/lu";
-import { Button, ChoiceGroup, Field, Sheet, Toggle, Banner } from "./ui";
+import { Button, ChoiceGroup, Field, MissingHint, Sheet, Toggle, Banner } from "./ui";
 import { compressImage } from "../lib/image";
 import { FLUID_OPTIONS, REDNESS_OPTIONS } from "../data/options";
 import { checkinWarnings } from "../lib/checkin";
@@ -153,9 +153,14 @@ export function CheckInSheet({ wound, open, onClose }) {
       onClose={close}
       title="Catat kondisi hari ini"
       footer={
-        <Button block size="lg" onClick={save} disabled={!ready || saving}>
-          {saving ? "Menyimpan…" : "Simpan catatan"}
-        </Button>
+        <>
+          <MissingHint
+            items={[form.pain === null && "tingkat nyeri", !form.redness && "kemerahan", !form.fluid && "cairan dari luka"]}
+          />
+          <Button block size="lg" onClick={save} disabled={!ready || saving}>
+            {saving ? "Menyimpan…" : "Simpan catatan"}
+          </Button>
+        </>
       }
     >
       <div className="space-y-6 pt-1">

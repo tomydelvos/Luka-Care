@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { LuArrowLeft, LuX, LuCheck, LuPhone, LuCircleHelp } from "react-icons/lu";
 import { Link, useRouter } from "../lib/router";
 import { cx } from "../lib/cx";
-import { Button, ChoiceGroup, Toggle, Banner, Field, Badge } from "../components/ui";
+import { Button, ChoiceGroup, Toggle, Banner, Field, Badge, MissingHint } from "../components/ui";
 import { WoundArt } from "../components/art";
 import { StepTimer } from "../components/StepTimer";
 import { EscalationView } from "../components/EscalationView";
@@ -348,9 +348,14 @@ export default function Guide() {
       </>
     );
     footer = (
-      <Button block size="lg" onClick={toDetailsNext} disabled={!detailsReady}>
-        Lihat langkah perawatan
-      </Button>
+      <>
+        <MissingHint
+          items={[!details.area && "bagian tubuh", !details.condition && "kondisi luka", !details.size && "seberapa luas"]}
+        />
+        <Button block size="lg" onClick={toDetailsNext} disabled={!detailsReady}>
+          Lihat langkah perawatan
+        </Button>
+      </>
     );
   } else if (step === 3) {
     content = (
@@ -469,14 +474,17 @@ export default function Guide() {
       </>
     );
     footer = (
-      <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-        <Button variant="ghost" size="lg" onClick={() => navigate("/")}>
+      <>
+        <MissingHint items={[save.pain === null && "tingkat nyeri"]} className="sm:text-right" />
+        <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <Button variant="ghost" size="lg" onClick={() => navigate("/")}>
           Selesai tanpa menyimpan
         </Button>
         <Button size="lg" onClick={saveWound} disabled={save.pain === null || saving} className="sm:min-w-64">
-          {saving ? "Menyimpan…" : "Simpan dan mulai pantau"}
-        </Button>
-      </div>
+            {saving ? "Menyimpan…" : "Simpan dan mulai pantau"}
+          </Button>
+        </div>
+      </>
     );
   }
 
@@ -513,7 +521,7 @@ export default function Guide() {
         </div>
       </header>
 
-      <main className={cx("mx-auto max-w-2xl px-4 pt-7 sm:px-6", footer ? "pb-40" : "pb-16")}>
+      <main className={cx("mx-auto max-w-2xl px-4 pt-7 sm:px-6", footer ? "pb-48" : "pb-16")}>
         {content}
         {!escalation && step >= 3 && <Disclaimer className="mt-10" />}
       </main>
