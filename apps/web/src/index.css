@@ -1,0 +1,256 @@
+@import "tailwindcss";
+
+/*
+  LukaCare design tokens
+  - gauze  : kanvas dingin keputihan seperti kasa
+  - pine   : hijau pinus untuk aksi utama (tenang, bukan biru klinis)
+  - plaster: warna plester luka, dipakai hemat sebagai ciri visual
+  - alert  : merah hanya untuk kondisi bahaya dan darurat
+*/
+:root {
+  --lc-canvas: #f5f7f4;
+  --lc-surface: #ffffff;
+  --lc-sunken: #ecf0eb;
+  --lc-ink: #12312c;
+  --lc-ink-soft: #2f4c46;
+  --lc-muted: #566b66;
+  --lc-line: #d9e1db;
+  --lc-pine: #0e6b58;
+  --lc-pine-strong: #0a5244;
+  --lc-pine-soft: #dcefe7;
+  --lc-on-pine: #ffffff;
+  --lc-plaster: #e9be93;
+  --lc-plaster-deep: #c98f5c;
+  --lc-plaster-soft: #f8eadb;
+  --lc-alert: #c8283a;
+  --lc-alert-soft: #fbe7e9;
+  --lc-caution: #9a5a06;
+  --lc-caution-soft: #fdf0dc;
+  --lc-mint: #22865f;
+  --lc-mint-soft: #e1f4ea;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --lc-canvas: #0d1916;
+    --lc-surface: #13221e;
+    --lc-sunken: #0a1412;
+    --lc-ink: #e4eeea;
+    --lc-ink-soft: #c3d3cd;
+    --lc-muted: #94aaa3;
+    --lc-line: #24362f;
+    --lc-pine: #4cc3a0;
+    --lc-pine-strong: #74d6b7;
+    --lc-pine-soft: #153a30;
+    --lc-on-pine: #052019;
+    --lc-plaster: #cf9f71;
+    --lc-plaster-deep: #9c6d43;
+    --lc-plaster-soft: #2e251b;
+    --lc-alert: #ff6b78;
+    --lc-alert-soft: #3a1a1f;
+    --lc-caution: #f2b25c;
+    --lc-caution-soft: #33260f;
+    --lc-mint: #5cd3a1;
+    --lc-mint-soft: #14332a;
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --lc-canvas: #0d1916;
+  --lc-surface: #13221e;
+  --lc-sunken: #0a1412;
+  --lc-ink: #e4eeea;
+  --lc-ink-soft: #c3d3cd;
+  --lc-muted: #94aaa3;
+  --lc-line: #24362f;
+  --lc-pine: #4cc3a0;
+  --lc-pine-strong: #74d6b7;
+  --lc-pine-soft: #153a30;
+  --lc-on-pine: #052019;
+  --lc-plaster: #cf9f71;
+  --lc-plaster-deep: #9c6d43;
+  --lc-plaster-soft: #2e251b;
+  --lc-alert: #ff6b78;
+  --lc-alert-soft: #3a1a1f;
+  --lc-caution: #f2b25c;
+  --lc-caution-soft: #33260f;
+  --lc-mint: #5cd3a1;
+  --lc-mint-soft: #14332a;
+  color-scheme: dark;
+}
+
+@theme {
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+@theme inline {
+  --color-canvas: var(--lc-canvas);
+  --color-surface: var(--lc-surface);
+  --color-sunken: var(--lc-sunken);
+  --color-ink: var(--lc-ink);
+  --color-ink-soft: var(--lc-ink-soft);
+  --color-muted: var(--lc-muted);
+  --color-line: var(--lc-line);
+  --color-pine: var(--lc-pine);
+  --color-pine-strong: var(--lc-pine-strong);
+  --color-pine-soft: var(--lc-pine-soft);
+  --color-on-pine: var(--lc-on-pine);
+  --color-plaster: var(--lc-plaster);
+  --color-plaster-deep: var(--lc-plaster-deep);
+  --color-plaster-soft: var(--lc-plaster-soft);
+  --color-alert: var(--lc-alert);
+  --color-alert-soft: var(--lc-alert-soft);
+  --color-caution: var(--lc-caution);
+  --color-caution-soft: var(--lc-caution-soft);
+  --color-mint: var(--lc-mint);
+  --color-mint-soft: var(--lc-mint-soft);
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    background: var(--lc-canvas);
+    color: var(--lc-ink);
+    font-family: var(--font-sans);
+    font-size: 1rem;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  h1,
+  h2,
+  h3 {
+    line-height: 1.2;
+    letter-spacing: -0.015em;
+    text-wrap: balance;
+  }
+  p {
+    text-wrap: pretty;
+  }
+  :focus-visible {
+    outline: 3px solid var(--lc-pine);
+    outline-offset: 2px;
+    border-radius: 10px;
+  }
+  ::selection {
+    background: var(--lc-plaster);
+    color: #12312c;
+  }
+}
+
+@layer components {
+  /* Sayap plester dengan lubang-lubang pori */
+  .plaster-wing {
+    background-color: var(--lc-plaster);
+    background-image: radial-gradient(circle, var(--lc-plaster-deep) 1.25px, transparent 1.7px);
+    background-size: 11px 11px;
+    background-position: 3px 3px;
+  }
+  /* Bantalan tengah plester dengan tekstur kasa halus */
+  .plaster-pad {
+    background-color: var(--lc-plaster-soft);
+    background-image:
+      repeating-linear-gradient(0deg, color-mix(in srgb, var(--lc-plaster-deep) 10%, transparent) 0 1px, transparent 1px 7px),
+      repeating-linear-gradient(90deg, color-mix(in srgb, var(--lc-plaster-deep) 10%, transparent) 0 1px, transparent 1px 7px);
+  }
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Satu momen gerak: plester "menempel" saat beranda dibuka */
+@keyframes plaster-stick {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) rotate(-3deg) scale(1.03);
+  }
+  60% {
+    opacity: 1;
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.plaster-stick {
+  animation: plaster-stick 720ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  transform-origin: 30% 50%;
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.toast-in {
+  animation: toast-in 200ms ease-out both;
+}
+
+@keyframes sheet-in {
+  from {
+    transform: translateY(24px);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+.sheet-in {
+  animation: sheet-in 220ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.fade-in {
+  animation: fade-in 180ms ease-out both;
+}
+
+@keyframes step-done {
+  0% {
+    transform: scale(0.6);
+  }
+  70% {
+    transform: scale(1.12);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+.step-done {
+  animation: step-done 260ms ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .plaster-stick,
+  .toast-in,
+  .sheet-in,
+  .fade-in,
+  .step-done {
+    animation: none;
+  }
+  * {
+    scroll-behavior: auto !important;
+  }
+}

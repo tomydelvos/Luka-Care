@@ -1,0 +1,25 @@
+// Frontend LukaCare sebagai Cloudflare Worker dengan Static Assets.
+// - Production: lukacare.com          → npm run deploy:production
+// - Staging:    staging.lukacare.com  → npm run deploy:staging
+// Domain lukacare.com harus sudah aktif sebagai zone di akun Cloudflare Anda.
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "lukacare-web",
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    "directory": "./dist",
+    // Semua rute yang tidak dikenal diarahkan ke index.html (SPA).
+    "not_found_handling": "single-page-application"
+  },
+  "routes": [
+    { "pattern": "lukacare.com", "custom_domain": true }
+  ],
+  "env": {
+    "staging": {
+      "name": "lukacare-web-staging",
+      "routes": [
+        { "pattern": "staging.lukacare.com", "custom_domain": true }
+      ]
+    }
+  }
+}

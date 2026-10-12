@@ -1,0 +1,995 @@
+OK, untuk awal apa nama yang cocok untuk fitur ini, kirim 5 contoh
+Untuk fitur yang mencakup pemantauan luka + rekomendasi perawatan dasar + produk marketplace, saya sarankan nama yang tidak terdengar seperti fitur diagnosis medis.
+
+#	Nama Fitur	Kesan
+1	Wound Care Guide	Profesional, jelas, mudah dikembangkan
+2	WoundCare Assist	Modern dan terasa seperti asisten
+3	CareMatch	Menekankan pencocokan kebutuhan perawatan
+4	LukaCare	Sederhana, mudah dipahami pengguna Indonesia
+5	WoundCare Finder	Cocok jika fokus pada pencarian produk perawatan
+Rekomendasi saya: Wound Care Guide
+Karena fiturnya nantinya dapat berkembang menjadi:
+
+Wound Care Guide
+│
+├── Cek Kondisi Luka
+├── Catat Perubahan
+├── Perawatan Dasar
+├── Rekomendasi Produk
+├── Marketplace
+└── Kapan Perlu ke Dokter
+Nama ini juga tidak terlalu mengesankan bahwa aplikasi mendiagnosis luka atau meresepkan obat, sehingga lebih cocok untuk konsep PRD yang sedang kita bangun.
+
+Bisa dikembangkan dengan panduan penanganan pertama seperti bersihkan luka lalu aplikasi dengan obat
+Bisa. Bahkan fitur akan lebih kuat jika Wound Care Guide tidak langsung mengarahkan pengguna ke produk, tetapi memberikan panduan pertolongan/perawatan awal secara bertahap, lalu baru menampilkan opsi produk yang relevan.
+
+Konsep fitur
+Wound Care Guide
+
+1. Kenali kondisi luka
+        ↓
+2. Panduan penanganan awal
+        ↓
+3. Bersihkan luka
+        ↓
+4. Lindungi/tutup luka
+        ↓
+5. Pilihan produk perawatan
+        ↓
+6. Pantau perubahan
+        ↓
+7. Kapan perlu ke dokter
+Contoh pengalaman pengguna
+Misalnya pengguna memilih "Luka lecet ringan":
+
+Langkah 1 — Bersihkan
+
+Cuci tangan terlebih dahulu, kemudian bersihkan luka dengan air mengalir. Bersihkan kotoran yang terlihat secara perlahan.
+
+Langkah 2 — Keringkan
+
+Tepuk perlahan area sekitar luka dengan bahan bersih. Hindari menggosok luka.
+
+Langkah 3 — Lindungi
+
+Tutup luka dengan penutup luka yang sesuai untuk membantu melindungi area tersebut dari gesekan dan kontaminasi.
+
+Langkah 4 — Produk
+Aplikasi dapat menampilkan kategori produk, misalnya:
+
+cairan pembersih luka yang sesuai
+kasa steril
+plester/perban
+dressing luka
+Kemudian pengguna dapat melihat produk yang tersedia di marketplace.
+
+Langkah 5 — Pantau
+
+Simpan foto dan kondisi luka hari ini untuk dibandingkan dengan pemeriksaan berikutnya.
+
+Untuk luka yang berbeda
+Aplikasi dapat memiliki beberapa jalur:
+
+                 Wound Care Guide
+                        │
+            ┌───────────┼───────────┐
+            ↓           ↓           ↓
+        Luka Baret   Luka Basah   Luka Kering
+            │           │           │
+            ↓           ↓           ↓
+        Bersihkan    Bersihkan    Bersihkan
+            ↓           ↓           ↓
+        Lindungi     Dressing     Lindungi
+            ↓           ↓           ↓
+        Produk       Produk       Produk
+Sedangkan:
+
+Luka dalam / menganga
+Perdarahan sulit berhenti
+Benda asing tertancap
+Luka akibat gigitan tertentu
+Tanda infeksi atau kondisi memburuk
+        ↓
+Hentikan rekomendasi produk
+        ↓
+Anjurkan pemeriksaan medis
+Hal penting untuk desain produknya
+Saya akan memisahkan "panduan perawatan" dan "rekomendasi produk".
+
+Jadi bukan:
+
+"Luka Anda adalah X → gunakan obat Y."
+
+Melainkan:
+
+"Berdasarkan informasi yang Anda masukkan, berikut panduan perawatan dasar yang relevan."
+"Berikut kategori produk yang dapat digunakan untuk mendukung perawatan tersebut."
+
+Dengan struktur ini, Wound Care Guide nantinya bisa menjadi fitur utama yang menggabungkan first-aid guidance → perawatan → produk → monitoring → eskalasi ke dokter, tanpa menjadikan aplikasi sebagai alat diagnosis.
+
+panduan buat local production di cloudfare
+Bisa. Kalau yang dimaksud menjalankan aplikasi secara lokal tetapi environment-nya dibuat semirip mungkin dengan production Cloudflare, pendekatan yang paling tepat sekarang adalah memakai Wrangler. Cloudflare menjalankan Worker secara lokal melalui Wrangler/Miniflare, termasuk simulasi D1, KV, R2, dan resource lain. 
+
+Untuk aplikasi Wound Care Guide yang kita rancang, saya sarankan arsitektur awal:
+
+MacBook / Local Development
+│
+├── Frontend
+│   └── Angular / JavaScript
+│
+├── Backend API
+│   └── Cloudflare Workers
+│
+├── Database
+│   └── Cloudflare D1
+│
+├── Image Storage
+│   └── Cloudflare R2
+│
+├── Authentication
+│   └── JWT / Session
+│
+└── Local Cloudflare Runtime
+    └── Wrangler + Miniflare
+Cloudflare memang mendukung simulasi lokal untuk D1, R2, KV, Durable Objects, Assets, dan beberapa binding lainnya. 
+
+1. Persiapkan Node.js
+Cek dahulu:
+
+node -v
+npm -v
+
+Kemudian dari folder project:
+
+npm install
+
+Cloudflare merekomendasikan Wrangler dipasang sebagai dependency lokal project dan dijalankan melalui npx. 
+
+Misalnya:
+
+npm install -D wrangler
+
+Cek:
+
+npx wrangler --version
+
+2. Login Cloudflare
+npx wrangler login
+
+Browser akan terbuka untuk authorization akun Cloudflare. Ini diperlukan ketika nantinya kita ingin berinteraksi dengan resource Cloudflare atau melakukan deployment. 
+
+3. Struktur project
+Untuk project kita, saya menyarankan mulai memisahkan aplikasi seperti:
+
+wound-care-guide/
+│
+├── frontend/
+│   ├── src/
+│   ├── public/
+│   └── package.json
+│
+├── backend/
+│   ├── src/
+│   │   ├── routes/
+│   │   ├── services/
+│   │   ├── middleware/
+│   │   └── index.js
+│   │
+│   ├── migrations/
+│   ├── wrangler.jsonc
+│   └── package.json
+│
+├── .env.example
+├── .gitignore
+└── README.md
+Dengan pemisahan ini kita bisa mengembangkan frontend dan API secara independen.
+
+4. Konfigurasi Worker
+Misalnya backend/wrangler.jsonc:
+
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "wound-care-api",
+  "main": "src/index.js",
+  "compatibility_date": "2026-10-02"
+}
+
+Backend sederhana:
+
+export default {
+  async fetch(request, env) {
+    const url = new URL(request.url);
+
+    if (url.pathname === "/api/health") {
+      return Response.json({
+        success: true,
+        environment: "local"
+      });
+    }
+
+    return new Response("Not Found", {
+      status: 404
+    });
+  }
+};
+
+5. Jalankan Cloudflare secara lokal
+Masuk ke backend:
+
+cd backend
+
+Kemudian:
+
+npx wrangler dev
+
+Secara default Worker tersedia pada:
+
+http://localhost:8787
+Cloudflare mendokumentasikan wrangler dev sebagai cara standar menjalankan Worker secara lokal. 
+
+Coba:
+
+curl http://localhost:8787/api/health
+
+Response:
+
+{
+  "success": true,
+  "environment": "local"
+}
+
+6. Local Database dengan D1
+Ini bagian yang menarik untuk aplikasi kita.
+
+Misalnya database:
+
+wound-care-db
+Nantinya tabel awal:
+
+users
+wounds
+wound_examinations
+wound_photos
+wound_notes
+Ketika memakai local development, Cloudflare dapat membuat resource lokal. Data lokal tersebut secara default disimpan di:
+
+.wrangler/state/
+Perubahan pada resource lokal tidak memengaruhi database production Cloudflare. 
+
+Karena itu tambahkan ke .gitignore:
+
+node_modules/
+.env
+.dev.vars
+.wrangler/
+dist/
+.DS_Store
+7. Pisahkan Local, Staging, Production
+Ini penting sejak awal.
+
+Saya menyarankan:
+
+LOCAL
+│
+├── localhost
+├── Local D1
+└── Local R2
+
+        ↓
+
+STAGING
+│
+├── staging API
+├── staging D1
+└── staging R2
+
+        ↓
+
+PRODUCTION
+│
+├── production domain
+├── production D1
+└── production R2
+Wrangler mendukung environment terpisah dan deployment menggunakan --env. 
+
+Contohnya:
+
+npx wrangler dev
+
+untuk local.
+
+Kemudian:
+
+npx wrangler deploy --env staging
+
+untuk staging.
+
+Dan:
+
+npx wrangler deploy --env production
+
+untuk production.
+
+8. Production deployment
+Setelah aplikasi lolos testing:
+
+npx wrangler deploy
+
+Cloudflare dapat men-deploy Worker ke alamat *.workers.dev atau custom domain. 
+
+Panduan resmi Cloudflare Workers — Local Development
+
+Arsitektur yang saya rekomendasikan untuk project kita
+Saya akan membawa project ini ke arah:
+
+                    WOUND CARE GUIDE
+
+                          USER
+                            │
+                     Angular Web App
+                            │
+                         HTTPS
+                            │
+                   Cloudflare Workers
+                            │
+              ┌─────────────┼─────────────┐
+              │             │             │
+              ▼             ▼             ▼
+             D1             R2        Auth/JWT
+          Database       Wound Photo
+              │
+              │
+      ┌───────┴────────┐
+      │                │
+ Wound History    Care Guidance
+                       │
+                       ▼
+               Product Recommendation
+                       │
+                       ▼
+                   Marketplace
+Untuk aplikasi luka ini, D1 cocok untuk user, wound record, pemeriksaan, hasil monitoring, dan katalog rekomendasi; sedangkan R2 lebih tepat untuk foto luka. Ini juga membuat kita tidak perlu menyimpan binary foto langsung di database.
+
+Tahap development-nya kemudian menjadi Local → Staging → Production, sehingga kita bisa menguji seluruh flow foto luka dan rekomendasi perawatan tanpa menyentuh data production. Cloudflare sendiri menyarankan environments untuk development/staging yang persisten dan preview untuk deployment sementara per branch/PR. 
+
+Kalau kita lanjut membangun project ini, langkah berikutnya sebaiknya membuat struktur repository + Angular frontend + Cloudflare Worker backend + D1 schema + R2, baru setelah itu kita implementasikan modul pertama Register/Login → Wound Profile → Upload Photo.
+
+web staging sudah terbentuk di http://localhost:3001**., lanjut panduan untuk bikin domain untuk production di cloudfare
+Bisa. Karena staging Anda sudah berjalan di localhost:3001, tahap berikutnya adalah membuat environment production yang terpisah. Untuk Cloudflare, saya sarankan struktur akhirnya:
+
+Development
+http://localhost:3001
+        │
+        ▼
+Staging
+staging.domainanda.com
+        │
+        ▼
+Production
+https://domainanda.com
+        │
+        ├── Frontend / Web App
+        ├── api.domainanda.com
+        ├── D1 Production
+        └── R2 Production
+Cloudflare sendiri merekomendasikan Custom Domain atau Worker Route untuk production, bukan menjadikan workers.dev sebagai alamat production utama. 
+
+1. Siapkan domain
+Ada dua kondisi.
+
+Jika belum memiliki domain, Anda bisa membeli domain dari registrar mana pun atau melalui Cloudflare Registrar. Jika domain dibeli melalui Cloudflare Registrar, nameserver Cloudflare sudah digunakan secara otomatis. 
+
+Jika sudah memiliki domain, misalnya:
+
+woundcare.id
+tambahkan root domain tersebut ke Cloudflare:
+
+Cloudflare Dashboard
+        ↓
+Add a domain
+        ↓
+woundcare.id
+Kemudian Cloudflare memberikan dua nameserver.
+
+Contoh bentuknya:
+
+xxxx.ns.cloudflare.com
+yyyy.ns.cloudflare.com
+Nameserver tersebut kemudian dipasang pada registrar tempat domain dibeli. Setelah nameserver aktif, Cloudflare menjadi authoritative DNS untuk domain tersebut. 
+
+Panduan resmi menambahkan domain ke Cloudflare
+
+2. Tentukan struktur domain
+Untuk project kita, saya lebih menyarankan struktur seperti ini:
+
+domainanda.com
+│
+├── www.domainanda.com
+│
+│   Production Web
+│
+├── api.domainanda.com
+│   Production API
+│
+└── staging.domainanda.com
+    Staging Web
+Contohnya kalau nama produk akhirnya WoundCare:
+
+https://woundcare.id
+https://api.woundcare.id
+https://staging.woundcare.id
+Jangan menggunakan:
+
+localhost:3001
+sebagai backend production. localhost:3001 tetap khusus development lokal.
+
+3. Tentukan cara deploy frontend
+Ini bergantung pada project localhost:3001 Anda.
+
+Jika frontend kita nanti berupa Angular/static SPA, ada dua opsi Cloudflare yang masuk akal:
+
+Frontend
+   │
+   ├── Cloudflare Workers + Static Assets
+   │
+   └── Cloudflare Pages
+Jika sekarang kita menggunakan Cloudflare Workers sebagai application origin, saya cenderung memilih:
+
+domainanda.com
+        ↓
+Cloudflare Worker
+        ↓
+Static Frontend
+dan:
+
+api.domainanda.com
+        ↓
+API Worker
+        ↓
+D1 / R2
+Ini menghasilkan pemisahan frontend/API yang cukup bersih.
+
+4. Deploy Worker terlebih dahulu
+Misalnya backend project:
+
+wound-care/
+├── frontend/
+└── backend/
+    ├── src/
+    ├── wrangler.jsonc
+    └── package.json
+Masuk:
+
+cd backend
+
+Login:
+
+npx wrangler login
+
+Kemudian deploy:
+
+npx wrangler deploy
+
+Pada tahap awal Worker bisa mendapatkan alamat seperti:
+
+wound-care-api.<account>.workers.dev
+Kita gunakan ini hanya untuk memastikan deployment berhasil.
+
+Setelah itu baru hubungkan:
+
+api.domainanda.com
+5. Hubungkan api.domainanda.com
+Untuk Worker yang merupakan origin API kita, Cloudflare merekomendasikan Custom Domain. Cloudflare akan membuat DNS record dan sertifikat TLS/SSL yang diperlukan secara otomatis. 
+
+Masuk ke:
+
+Cloudflare Dashboard
+        ↓
+Workers & Pages
+        ↓
+wound-care-api
+        ↓
+Settings
+        ↓
+Domains & Routes
+        ↓
+Add
+        ↓
+Custom Domain
+Masukkan:
+
+api.domainanda.com
+Kemudian:
+
+Add Custom Domain
+Hasil akhirnya:
+
+https://api.domainanda.com
+akan menjalankan Worker kita.
+
+Panduan Cloudflare Workers Custom Domains
+
+6. Atau konfigurasi melalui Wrangler
+Saya justru lebih menyukai cara ini untuk project kita karena konfigurasi infrastructure tersimpan di Git.
+
+Pada:
+
+backend/wrangler.jsonc
+buat:
+
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+
+  "name": "wound-care-api",
+
+  "main": "src/index.js",
+
+  "compatibility_date": "2026-10-02",
+
+  "routes": [
+    {
+      "pattern": "api.domainanda.com",
+      "custom_domain": true
+    }
+  ]
+}
+
+Kemudian:
+
+npx wrangler deploy
+
+Cloudflare akan membuat Custom Domain untuk Worker tersebut. 
+
+7. Production frontend
+Setelah frontend selesai di-build, misalnya Angular:
+
+npm run build
+
+hasilnya biasanya masuk ke:
+
+dist/
+Jika menggunakan Cloudflare Pages, alurnya:
+
+Angular
+   ↓
+npm run build
+   ↓
+dist/
+   ↓
+Cloudflare Pages
+   ↓
+domainanda.com
+Pada Pages:
+
+Workers & Pages
+        ↓
+Project
+        ↓
+Custom domains
+        ↓
+Set up a domain
+masukkan:
+
+domainanda.com
+Cloudflare Pages mendukung custom domain langsung dari dashboard; untuk apex/root domain, zone dan nameserver harus sudah dikonfigurasi di Cloudflare. 
+
+8. Pisahkan environment variable
+Ini penting sebelum production.
+
+Local:
+
+APP_ENV=development
+API_URL=http://localhost:8787
+Staging:
+
+APP_ENV=staging
+API_URL=https://api-staging.domainanda.com
+Production:
+
+APP_ENV=production
+API_URL=https://api.domainanda.com
+Jangan memasukkan production secret ke:
+
+.env
+GitHub
+source code
+Secret production sebaiknya disimpan melalui Cloudflare secret management/Wrangler.
+
+9. Arsitektur akhirnya
+Saya sarankan project Wound Care kita nantinya menjadi:
+
+                         INTERNET
+                            │
+                            ▼
+                       CLOUDFLARE
+                            │
+              ┌─────────────┴─────────────┐
+              │                           │
+              ▼                           ▼
+      domainanda.com             api.domainanda.com
+              │                           │
+              ▼                           ▼
+        Frontend App              Cloudflare Worker
+                                          │
+                         ┌────────────────┼───────────────┐
+                         │                │               │
+                         ▼                ▼               ▼
+                         D1               R2          Auth/JWT
+                      Database        Wound Images
+Kemudian environment-nya:
+
+LOCAL
+────────────────────────────
+localhost:3001
+localhost:8787
+Local DB
+Local Storage
+
+
+STAGING
+────────────────────────────
+staging.domainanda.com
+api-staging.domainanda.com
+D1 Staging
+R2 Staging
+
+
+PRODUCTION
+────────────────────────────
+domainanda.com
+api.domainanda.com
+D1 Production
+R2 Production
+Saya sangat menyarankan D1 dan R2 staging jangan menggunakan resource production, terutama karena aplikasi ini nantinya menyimpan foto luka pengguna.
+
+Urutan pengerjaan dari kondisi Anda sekarang
+Karena localhost:3001 sudah berjalan, jangan ubah dulu aplikasi tersebut. Berikutnya kita kerjakan:
+
+1. Domain → 2. Cloudflare DNS → 3. Production Worker → 4. api.domain.com → 5. Production Frontend → 6. domain.com → 7. Environment variables → 8. D1 Production → 9. R2 Production → 10. SSL/security → 11. GitHub auto-deployment
+
+Setelah ini, saya bisa pandu langkah demi langkah mulai dari Step 1: membeli/menambahkan domain ke Cloudflare sampai https://domainanda.com benar-benar online, termasuk konfigurasi DNS dan Wrangler.
+
+ok lanjut
+Baik. Kita mulai dari Step 1 — Domain + Cloudflare DNS.
+
+Sebelum lanjut ke konfigurasi production, saya perlu satu informasi: apakah Anda sudah memiliki domain?
+
+Jika sudah, kirim nama domainnya, misalnya woundcare.id atau namaproject.com. Saya akan lanjutkan dengan konfigurasi yang konkret untuk domain tersebut: Cloudflare DNS → production frontend → api.domain.com → SSL → staging → D1/R2.
+
+Jika belum, tahap pertama adalah menentukan dan membeli domain. Domain bisa dibeli melalui registrar pilihan Anda atau Cloudflare Registrar. Setelah domain tersedia, kita akan membentuk struktur seperti:
+
+domain.com
+├── www.domain.com          → Production Web
+├── api.domain.com          → Production API
+├── staging.domain.com      → Staging Web
+└── api-staging.domain.com  → Staging API
+Untuk kondisi project Anda sekarang, localhost:3001 tetap kita pertahankan sebagai development lokal dan tidak perlu diubah terlebih dahulu.
+
+Kirim nama domain yang sudah Anda punya; setelah itu saya akan berikan perintah dan konfigurasi Cloudflare yang persis untuk domain tersebut.
+
+www.lukacare.com
+Bagus. Untuk lukacare.com, saya sarankan struktur production seperti ini:
+
+lukacare.com              → Production Web
+www.lukacare.com          → redirect ke lukacare.com
+api.lukacare.com          → Production API
+staging.lukacare.com      → Staging Web
+api-staging.lukacare.com  → Staging API
+Cloudflare merekomendasikan Custom Domain untuk Worker yang menjadi origin aplikasi production, sementara workers.dev lebih cocok untuk development/personal use. 
+
+Step 1 — Tambahkan lukacare.com ke Cloudflare
+Masuk ke Cloudflare Dashboard, lalu:
+
+Account Home
+→ Add a domain
+→ lukacare.com
+Masukkan lukacare.com, bukan www.lukacare.com.
+
+Cloudflare kemudian akan memberikan dua nameserver, misalnya:
+
+xxxx.ns.cloudflare.com
+yyyy.ns.cloudflare.com
+Nameserver tersebut harus dipasang di registrar tempat Anda membeli lukacare.com. Setelah nameserver menunjuk ke Cloudflare, Cloudflare akan menjadi DNS authoritative untuk domain tersebut. 
+
+Jika domain dibeli langsung melalui Cloudflare Registrar, bagian nameserver ini biasanya sudah otomatis. 
+
+Step 2 — Jadikan lukacare.com domain utama
+Saya sarankan domain utama aplikasi adalah:
+
+https://lukacare.com
+bukan:
+
+https://www.lukacare.com
+www.lukacare.com tetap aktif, tetapi kita arahkan:
+
+www.lukacare.com
+        ↓ 301
+https://lukacare.com
+Cloudflare mendukung redirect www → apex/root domain melalui redirect rules. 
+
+Jadi nanti user yang mengetik:
+
+www.lukacare.com
+otomatis masuk ke:
+
+https://lukacare.com
+Step 3 — Deploy frontend production
+Saat ini Anda memiliki:
+
+http://localhost:3001
+Ini tetap menjadi:
+
+LOCAL DEVELOPMENT
+Jangan arahkan domain production langsung ke localhost:3001.
+
+Flow-nya harus:
+
+localhost:3001
+      │
+      │ npm run build
+      ▼
+Production Build
+      │
+      ▼
+Cloudflare
+      │
+      ▼
+https://lukacare.com
+Jika project Anda berupa Angular/SPA:
+
+npm run build
+
+atau untuk Angular:
+
+ng build --configuration production
+
+Hasil build biasanya berada di:
+
+dist/
+Step 4 — Buat frontend di Cloudflare
+Jika menggunakan Cloudflare Pages, masuk ke:
+
+Cloudflare
+→ Workers & Pages
+→ Create
+→ Pages
+Hubungkan dengan GitHub repository project Anda.
+
+Contoh konfigurasi Angular:
+
+Framework preset:
+Angular
+
+Build command:
+npm run build
+
+Build output:
+dist/<nama-project>/browser
+Path output bisa berbeda tergantung versi/config Angular Anda, jadi cek hasil folder dist.
+
+Setelah deploy, Cloudflare biasanya memberikan URL sementara:
+
+lukacare.pages.dev
+Pastikan aplikasi berjalan normal dulu di URL tersebut.
+
+Cloudflare Pages mendukung custom apex domain seperti lukacare.com apabila zone/domain sudah berada di Cloudflare. 
+
+Step 5 — Hubungkan lukacare.com
+Di Pages project:
+
+Workers & Pages
+→ LukaCare Frontend
+→ Custom domains
+→ Set up a domain
+Masukkan:
+
+lukacare.com
+Lalu:
+
+Continue
+Cloudflare akan mengurus DNS yang diperlukan dan certificate HTTPS. 
+
+Hasilnya:
+
+https://lukacare.com
+Step 6 — Tambahkan www.lukacare.com
+Kita tidak perlu menjadikan www sebagai aplikasi terpisah.
+
+Gunakan redirect:
+
+https://www.lukacare.com/*
+            ↓
+https://lukacare.com/*
+Status:
+
+301 Permanent Redirect
+Dan aktifkan:
+
+Preserve query string
+Preserve path
+Contoh:
+
+www.lukacare.com/login
+menjadi:
+
+lukacare.com/login
+bukan hanya:
+
+lukacare.com
+Step 7 — Buat Production API
+Untuk backend, jangan gunakan:
+
+lukacare.com/api
+untuk tahap awal.
+
+Lebih bersih menggunakan:
+
+https://api.lukacare.com
+Arsitekturnya:
+
+lukacare.com
+     │
+     │ HTTPS
+     ▼
+api.lukacare.com
+     │
+     ▼
+Cloudflare Worker
+     │
+ ┌───┴────┐
+ ▼        ▼
+D1        R2
+Step 8 — Konfigurasi Worker Production
+Contoh wrangler.jsonc:
+
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+
+  "name": "lukacare-api",
+
+  "main": "src/index.js",
+
+  "compatibility_date": "2026-10-02",
+
+  "routes": [
+    {
+      "pattern": "api.lukacare.com",
+      "custom_domain": true
+    }
+  ]
+}
+
+Kemudian deploy:
+
+npx wrangler deploy
+
+Cloudflare akan membuat DNS record dan certificate untuk Custom Domain Worker secara otomatis. 
+
+Setelah berhasil:
+
+https://api.lukacare.com
+akan menjadi backend production.
+
+Step 9 — Buat Health Check
+Saya sarankan API pertama yang dibuat:
+
+GET https://api.lukacare.com/health
+Response:
+
+{
+  "success": true,
+  "service": "lukacare-api",
+  "environment": "production"
+}
+
+Dengan begitu kita bisa mengetahui backend hidup sebelum menghubungkan frontend.
+
+Step 10 — Ubah frontend production
+Local saat ini mungkin memakai:
+
+API_URL=http://localhost:8787
+Untuk production ubah menjadi:
+
+API_URL=https://api.lukacare.com
+Sehingga:
+
+LOCAL
+localhost:3001
+        ↓
+localhost:8787
+sedangkan:
+
+PRODUCTION
+
+https://lukacare.com
+        ↓
+https://api.lukacare.com
+Step 11 — Siapkan staging
+Jangan gunakan database production untuk testing.
+
+Struktur akhirnya:
+
+DEVELOPMENT
+
+http://localhost:3001
+        │
+        └── Local API
+            Local D1
+            Local R2
+
+
+STAGING
+
+https://staging.lukacare.com
+        │
+        └── https://api-staging.lukacare.com
+              │
+              ├── D1 Staging
+              └── R2 Staging
+
+
+PRODUCTION
+
+https://lukacare.com
+        │
+        └── https://api.lukacare.com
+              │
+              ├── D1 Production
+              └── R2 Production
+Ini penting untuk LukaCare karena nantinya foto luka pengguna sebaiknya tidak bercampur dengan data testing.
+
+Struktur repository yang saya sarankan
+lukacare/
+│
+├── apps/
+│   │
+│   ├── web/
+│   │   ├── src/
+│   │   ├── public/
+│   │   ├── package.json
+│   │   └── environment/
+│   │
+│   └── api/
+│       ├── src/
+│       │   ├── routes/
+│       │   ├── middleware/
+│       │   ├── services/
+│       │   └── index.js
+│       │
+│       ├── migrations/
+│       └── wrangler.jsonc
+│
+├── packages/
+│   └── shared/
+│
+├── .gitignore
+├── package.json
+└── README.md
+Target kita
+Setelah setup domain selesai, hasil yang ingin kita capai adalah:
+
+✅ http://localhost:3001
+   Development
+
+✅ https://staging.lukacare.com
+   Staging
+
+✅ https://lukacare.com
+   Production Web
+
+✅ https://www.lukacare.com
+   → redirect ke lukacare.com
+
+✅ https://api.lukacare.com
+   Production API
+
+✅ HTTPS / SSL
+   Cloudflare
+
+⬜ D1 Production
+⬜ R2 Wound Image Storage
+⬜ Authentication
+⬜ GitHub auto deployment
+Langkah berikutnya setelah domain aktif di Cloudflare adalah membuat api.lukacare.com + Worker production terlebih dahulu, lalu kita sambungkan frontend localhost:3001 ke production build secara bertahap. Saya sarankan jangan membuat D1/R2 production sebelum pemisahan environment ini selesai.
+
+
