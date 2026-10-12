@@ -1,0 +1,25 @@
+{
+  "name": "lukacare-api",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "API LukaCare — Cloudflare Worker + D1 + R2",
+  "scripts": {
+    "dev": "wrangler dev",
+    "db:migrate:local": "wrangler d1 migrations apply lukacare --local",
+    "db:migrate:staging": "wrangler d1 migrations apply lukacare-staging --remote --env staging",
+    "db:migrate:production": "wrangler d1 migrations apply lukacare --remote",
+    "test": "vitest run",
+    "deploy:staging": "wrangler deploy --env staging",
+    "deploy:production": "wrangler deploy"
+  },
+  "dependencies": {
+    "aws4fetch": "^1.0.20",
+    "hono": "^4.9.0"
+  },
+  "devDependencies": {
+    "@cloudflare/vitest-plugin": "^1.4.0",
+    "vitest": "^4.1.0",
+    "wrangler": "^4.0.0"
+  }
+}
