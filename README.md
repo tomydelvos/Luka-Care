@@ -29,17 +29,35 @@ lukacare/
 
 ## Menjalankan di lokal
 
-Butuh Node.js 20 atau lebih baru.
+Butuh Node.js 20 atau lebih baru. Mode development memakai API lokal (`VITE_USE_MOCK_API=false` di `apps/web/.env.development`), jadi jalankan API dan web.
+
+**Di Mac:** klik kanan `jalankan-lukacare.command` di root repo lalu pilih **Open** (pertama kali) atau klik dua kali (selanjutnya). Skrip ini:
+- memasang dependency;
+- membuat `apps/api/.dev.vars` dengan secret acak;
+- menjalankan migrasi D1 lokal;
+- menyalakan API di http://localhost:8787, lalu web di http://localhost:3001, dan membuka browser.
+
+Biarkan jendela Terminal-nya terbuka. Tekan Ctrl+C untuk berhenti, dan API ikut berhenti.
+
+**Manual (OS apa pun), dua terminal:**
 
 ```bash
+# Terminal 1: API
+cd apps/api
+npm ci
+cp .dev.vars.example .dev.vars   # ganti FILE_SIGNING_SECRET dengan string acak
+npm run db:migrate:local
+npm run dev                      # http://localhost:8787
+
+# Terminal 2: web
 cd apps/web
 npm install
-npm run dev
+npm run dev                      # http://localhost:3001
 ```
 
-Buka http://localhost:3001.
+Data lokal (akun, luka, foto) tersimpan di `apps/api/.wrangler/`.
 
-Di Mac, bisa juga klik kanan `jalankan-lukacare.command` di root repo lalu pilih **Open** (pertama kali) atau klik dua kali (selanjutnya). Skrip ini memasang dependency bila perlu, lalu membuka browser otomatis. Biarkan jendela Terminal-nya terbuka; tekan Ctrl+C untuk berhenti. Tanpa backend pun semua fitur jalan, karena `VITE_USE_MOCK_API=true` menyimpan data di `localStorage` browser. Di halaman **Pantau**, tombol "Lihat dengan data contoh" mengisi dua luka contoh untuk mencoba tampilan pemantauan.
+**Tanpa backend (mode demo):** jalankan `VITE_USE_MOCK_API=true npm run dev` di `apps/web`. Semua data disimpan di `localStorage`, dan di halaman **Pantau** ada tombol "Lihat dengan data contoh".
 
 ## Halaman
 
@@ -67,7 +85,7 @@ Di Mac, bisa juga klik kanan `jalankan-lukacare.command` di root repo lalu pilih
 | --- | --- | --- | --- |
 | `VITE_APP_ENV` | development | staging | production |
 | `VITE_API_URL` | http://localhost:8787 | https://api-staging.lukacare.com | https://api.lukacare.com |
-| `VITE_USE_MOCK_API` | true | true | true → ubah ke `false` saat API siap |
+| `VITE_USE_MOCK_API` | false (API lokal) | true → ubah ke `false` setelah API staging di-deploy | true → ubah ke `false` setelah API production di-deploy |
 | `VITE_ROUTER_MODE` | history | history | history |
 
 Semua `VITE_*` ikut ter-bundle ke browser. Jangan taruh secret di sini; secret milik Worker API disimpan dengan `wrangler secret put`.
@@ -124,7 +142,8 @@ Foto dan catatan luka termasuk data kesehatan, yang dalam UU No. 27 Tahun 2022 (
 
 - [ ] Review konten medis oleh tenaga kesehatan
 - [x] `apps/api`: Worker + D1 (`users`, `wounds`, `wound_examinations`, `wound_photos`) + R2
-- [ ] Sambungkan frontend ke API (`VITE_USE_MOCK_API=false`) dan deploy API ke staging
+- [x] Sambungkan frontend ke API (development memakai API lokal)
+- [ ] Deploy API ke staging/production, lalu set `VITE_USE_MOCK_API=false` di `.env.staging` dan `.env.production`
 - [ ] Ganti katalog contoh dengan data mitra apotek dan integrasi pembayaran
 - [ ] Pengingat harian (Web Push) untuk catat kondisi luka
 - [ ] GitHub Actions: deploy staging otomatis dari branch `main`

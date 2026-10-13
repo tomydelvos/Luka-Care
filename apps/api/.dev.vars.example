@@ -3,6 +3,8 @@
 FILE_SIGNING_SECRET=ganti-dengan-string-acak-panjang
 # Wajib untuk dev lokal: URL foto harus menunjuk ke wrangler dev, bukan api.lukacare.com.
 PUBLIC_API_URL=http://localhost:8787
+# Izinkan frontend dev di port berapa pun (Vite pindah port bila 3001 terpakai).
+ALLOWED_ORIGINS=http://localhost:*,http://127.0.0.1:*
 
 # Isi keduanya (dan R2_ACCOUNT_ID di wrangler.jsonc) agar foto diunggah langsung ke R2
 # lewat presigned URL, tanpa melewati Worker.

@@ -8,10 +8,21 @@ import { me } from "./routes/me";
 
 const app = new Hono();
 
+// ALLOWED_ORIGINS: daftar origin dipisah koma. Entri berakhiran ":*" mengizinkan semua port
+// host itu (dipakai di dev lokal, mis. "http://localhost:*"), selain itu harus sama persis.
+export function isAllowedOrigin(origin, list) {
+  if (!origin) return false;
+  return list.some((entry) => {
+    if (!entry.endsWith(":*")) return entry === origin;
+    const base = entry.slice(0, -1);
+    return origin.startsWith(base) && /^\d+$/.test(origin.slice(base.length));
+  });
+}
+
 app.use("*", async (c, next) => {
   const allowed = (c.env.ALLOWED_ORIGINS || "").split(",").map((s) => s.trim()).filter(Boolean);
   return cors({
-    origin: (origin) => (allowed.includes(origin) ? origin : null),
+    origin: (origin) => (isAllowedOrigin(origin, allowed) ? origin : null),
     allowMethods: ["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
     allowHeaders: ["Content-Type", "Authorization"],
     maxAge: 86400,

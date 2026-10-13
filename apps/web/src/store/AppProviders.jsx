@@ -1,6 +1,8 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { authService } from "../services/authService";
 import { woundService } from "../services/woundService";
+import { accountService } from "../services/accountService";
+import { SESSION_EXPIRED_EVENT } from "../services/http";
 import { sampleWounds } from "../services/sample";
 import { readJSON, writeJSON, clearAll } from "../lib/storage";
 import { PRODUCT_BY_ID } from "../data/products";
@@ -41,6 +43,18 @@ function ToastProvider({ children }) {
 /* ---------- Auth ---------- */
 function AuthProvider({ children }) {
   const [session, setSession] = useState(() => authService.current());
+  const toast = useToast();
+
+  // Token ditolak server (kedaluwarsa atau akun dihapus di perangkat lain).
+  useEffect(() => {
+    const onExpired = () => {
+      setSession(null);
+      toast("Sesi Anda sudah berakhir. Silakan masuk lagi.", "alert");
+    };
+    window.addEventListener(SESSION_EXPIRED_EVENT, onExpired);
+    return () => window.removeEventListener(SESSION_EXPIRED_EVENT, onExpired);
+  }, [toast]);
+
   const value = useMemo(
     () => ({
       user: session?.user ?? null,
@@ -200,7 +214,9 @@ export const useWounds = () => useCtx(WoundContext, "useWounds");
 export const useCart = () => useCtx(CartContext, "useCart");
 export const useToast = () => useCtx(ToastContext, "useToast");
 
-export function wipeLocalData() {
+// Hapus semua data pengguna (server bila memakai API, lalu perangkat ini) dan mulai ulang app.
+export async function deleteAllData() {
+  await accountService.deleteAll();
   clearAll();
-  window.location.reload();
+  window.location.assign("/");
 }

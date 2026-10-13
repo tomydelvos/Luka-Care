@@ -109,7 +109,8 @@ async function uploadPhoto(woundId, dataUrl) {
 }
 
 const http = {
-  list: () => apiFetch("/wounds"),
+  // Luka hanya ada di akun; tanpa sesi tidak perlu bertanya ke server.
+  list: () => (readJSON("session", null)?.token ? apiFetch("/wounds") : Promise.resolve([])),
   create: (input) => apiFetch("/wounds", { method: "POST", body: input }),
   update: (id, patch) => apiFetch(`/wounds/${id}`, { method: "PATCH", body: patch }),
   remove: (id) => apiFetch(`/wounds/${id}`, { method: "DELETE" }),

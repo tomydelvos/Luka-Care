@@ -1,6 +1,7 @@
 import { env } from "cloudflare:workers";
 import { describe, expect, it } from "vitest";
 import { CHECKIN, call, createWound, registerUser, uploadPhoto } from "./helpers";
+import { isAllowedOrigin } from "../src/index";
 
 describe("me (hak subjek data)", () => {
   it("mengekspor semua data pengguna", async () => {
@@ -41,5 +42,15 @@ describe("umum", () => {
       call("/wounds", { method: "OPTIONS", headers: { Origin: origin, "Access-Control-Request-Method": "POST" } });
     expect((await pre("http://localhost:3001")).res.headers.get("Access-Control-Allow-Origin")).toBe("http://localhost:3001");
     expect((await pre("https://jahat.example")).res.headers.get("Access-Control-Allow-Origin")).toBeNull();
+  });
+
+  it("pola :* hanya cocok untuk port angka di host yang sama", () => {
+    const list = ["http://localhost:*", "https://lukacare.com"];
+    expect(isAllowedOrigin("http://localhost:3002", list)).toBe(true);
+    expect(isAllowedOrigin("https://lukacare.com", list)).toBe(true);
+    expect(isAllowedOrigin("http://localhost:3002.jahat.example", list)).toBe(false);
+    expect(isAllowedOrigin("http://localhost.jahat.example", list)).toBe(false);
+    expect(isAllowedOrigin("https://lukacare.com.jahat.example", list)).toBe(false);
+    expect(isAllowedOrigin(undefined, list)).toBe(false);
   });
 });
