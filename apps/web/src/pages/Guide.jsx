@@ -10,6 +10,8 @@ import { EscalationView } from "../components/EscalationView";
 import { ProductRow, ProductSheet } from "../components/shop";
 import { PhotoPicker, PainScale } from "../components/monitor";
 import { Disclaimer } from "../components/AppShell";
+import { CaseStories } from "../components/CaseStories";
+import { ContactProfile } from "../components/ContactProfile";
 import { RED_FLAGS, RED_FLAG_BY_ID } from "../data/redFlags";
 import { WOUND_GUIDES, WOUND_TYPE_LIST, assessDetails } from "../data/woundGuides";
 import { AREA_OPTIONS, CONDITION_OPTIONS, SIZE_OPTIONS, WHO_OPTIONS, labelOf } from "../data/options";
@@ -75,7 +77,7 @@ function FlagChecklist({ selected, onToggle }) {
               <span
                 className={cx(
                   "mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-lg border-2 transition-colors peer-focus-visible:outline-3 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-pine",
-                  checked ? "border-alert bg-alert text-white" : "border-muted/60 bg-surface"
+                  checked ? "border-alert bg-alert text-on-alert" : "border-muted/60 bg-surface"
                 )}
                 aria-hidden="true"
               >
@@ -158,7 +160,7 @@ function CareSteps({ steps, done, onDone, onEscalate }) {
               <span
                 className={cx(
                   "tabular grid h-8 w-8 shrink-0 place-items-center rounded-full text-sm font-extrabold",
-                  isDone ? "step-done bg-mint text-white" : isActive ? "bg-pine text-on-pine" : "bg-sunken text-ink-soft"
+                  isDone ? "step-done bg-mint text-on-mint" : isActive ? "bg-pine text-on-pine" : "bg-sunken text-ink-soft"
                 )}
                 aria-hidden="true"
               >
@@ -360,6 +362,7 @@ export default function Guide() {
             />
           </div>
         </div>
+        <CaseStories woundType={type} className="mt-12" />
       </>
     );
     footer = (
@@ -417,6 +420,7 @@ export default function Guide() {
             ))}
           </ul>
         </section>
+        <ContactProfile className="mt-10" />
       </>
     );
     footer = (

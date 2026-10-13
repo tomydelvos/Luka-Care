@@ -86,7 +86,7 @@ function BottomNav() {
                 <span className={cx("relative grid h-8 w-14 place-items-center rounded-full transition-colors", active && "bg-pine-soft")}>
                   <Icon size={22} aria-hidden="true" />
                   {badge > 0 && (
-                    <span className="tabular absolute -right-0.5 -top-1 grid h-[18px] min-w-[18px] place-items-center rounded-full bg-plaster-deep px-1 text-[11px] font-bold text-white">
+                    <span className="tabular absolute -right-0.5 -top-1 grid h-[18px] min-w-[18px] place-items-center rounded-full bg-plaster-deep px-1 text-[11px] font-bold text-on-plaster">
                       {badge}
                     </span>
                   )}
@@ -131,7 +131,7 @@ function Sidebar() {
                   <Icon size={20} aria-hidden="true" />
                   <span className="flex-1">{label}</span>
                   {badge > 0 && (
-                    <span className="tabular rounded-full bg-plaster-deep px-2 text-xs font-bold leading-5 text-white">{badge}</span>
+                    <span className="tabular rounded-full bg-plaster-deep px-2 text-xs font-bold leading-5 text-on-plaster">{badge}</span>
                   )}
                 </Link>
               </li>
@@ -161,7 +161,7 @@ function Sidebar() {
           <Link to="/keranjang" className="relative grid h-10 w-10 place-items-center rounded-full text-ink-soft hover:bg-sunken" aria-label={`Keranjang, ${count} barang`}>
             <LuShoppingCart size={20} />
             {count > 0 && (
-              <span className="tabular absolute -right-0.5 top-0 grid h-[18px] min-w-[18px] place-items-center rounded-full bg-plaster-deep px-1 text-[11px] font-bold text-white">
+              <span className="tabular absolute -right-0.5 top-0 grid h-[18px] min-w-[18px] place-items-center rounded-full bg-plaster-deep px-1 text-[11px] font-bold text-on-plaster">
                 {count}
               </span>
             )}

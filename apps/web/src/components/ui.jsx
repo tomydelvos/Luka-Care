@@ -8,7 +8,7 @@ const VARIANTS = {
   primary: "bg-pine text-on-pine hover:bg-pine-strong",
   secondary: "bg-surface text-ink border border-line hover:border-muted",
   soft: "bg-pine-soft text-pine-strong hover:brightness-95",
-  danger: "bg-alert text-white hover:brightness-110",
+  danger: "bg-alert text-on-alert hover:brightness-110",
   "danger-soft": "bg-alert-soft text-alert hover:brightness-95",
   ghost: "text-pine hover:bg-pine-soft",
   "danger-ghost": "text-alert hover:bg-alert-soft",
