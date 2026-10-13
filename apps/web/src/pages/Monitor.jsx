@@ -3,11 +3,13 @@ import { LuPlus } from "react-icons/lu";
 import { Button, PageHeader } from "../components/ui";
 import { WoundRow } from "../components/WoundRow";
 import { PlasterGlyph } from "../components/art";
-import { useToast, useWounds } from "../store/AppProviders";
+import { useAuth, useToast, useWounds } from "../store/AppProviders";
+import { USE_MOCK_API } from "../config/env";
 import { cx } from "../lib/cx";
 
 export default function Monitor() {
   const { wounds, loading, loadSample } = useWounds();
+  const { user } = useAuth();
   const toast = useToast();
   const [tab, setTab] = useState("dipantau");
   const active = wounds.filter((w) => w.status === "dipantau");
@@ -38,12 +40,20 @@ export default function Monitor() {
           <PlasterGlyph size={56} className="mx-auto" />
           <h2 className="mt-4 text-xl font-extrabold">Belum ada luka yang dipantau</h2>
           <p className="mx-auto mt-2 max-w-sm text-[15px] text-muted">
-            Mulai dari panduan perawatan. Di langkah terakhir, simpan lukanya agar bisa dicatat setiap hari.
+            {user || USE_MOCK_API
+              ? "Mulai dari panduan perawatan. Di langkah terakhir, simpan lukanya agar bisa dicatat setiap hari."
+              : "Luka yang Anda simpan ada di akun. Masuk untuk melihatnya, atau mulai dari panduan perawatan."}
           </p>
           <div className="mt-6 flex flex-col items-center gap-2 sm:flex-row sm:justify-center">
             <Button to="/panduan" size="lg">
               Mulai panduan
             </Button>
+            {!user && !USE_MOCK_API && (
+              <Button to="/masuk" variant="secondary" size="lg">
+                Masuk
+              </Button>
+            )}
+            {USE_MOCK_API && (
             <Button
               variant="ghost"
               size="lg"
@@ -54,6 +64,7 @@ export default function Monitor() {
             >
               Lihat dengan data contoh
             </Button>
+            )}
           </div>
         </section>
       ) : (

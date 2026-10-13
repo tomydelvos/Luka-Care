@@ -14,7 +14,7 @@ export function woundStatus(wound) {
 
 export function WoundRow({ wound }) {
   const last = wound.checkins[wound.checkins.length - 1];
-  const photo = [...wound.checkins].reverse().find((c) => c.photo)?.photo;
+  const photo = [...wound.checkins].reverse().find((c) => c.photo)?.photo ?? wound.photos?.at(-1)?.src;
   const status = woundStatus(wound);
   const meta =
     wound.status === "sembuh"

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { LuEye, LuEyeOff, LuCheck } from "react-icons/lu";
 import { Link, useRouter } from "../lib/router";
-import { Banner, Button, Field } from "../components/ui";
+import { Banner, Button, Field, MissingHint } from "../components/ui";
 import { PlasterGlyph } from "../components/art";
 import { useAuth, useToast } from "../store/AppProviders";
 import { USE_MOCK_API } from "../config/env";
@@ -54,10 +54,8 @@ function Checkbox({ checked, onChange, children }) {
   );
 }
 
-export function Login() {
+export function LoginForm({ onDone }) {
   const { login } = useAuth();
-  const { navigate } = useRouter();
-  const toast = useToast();
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -68,8 +66,7 @@ export function Login() {
     setError("");
     try {
       const user = await login({ email: form.email.trim().toLowerCase(), password: form.password });
-      toast(`Selamat datang kembali, ${user.name.split(" ")[0]}`);
-      navigate("/", { replace: true });
+      onDone(user);
     } catch (err) {
       setError(err.message);
       setBusy(false);
@@ -77,39 +74,29 @@ export function Login() {
   };
 
   return (
-    <AuthLayout
-      title="Masuk"
-      lead="Masuk untuk menyimpan riwayat luka dan pesanan ke akun Anda."
-      footer={
-        <>
-          Belum punya akun?{" "}
-          <Link to="/daftar" className="font-semibold text-pine">
-            Daftar
-          </Link>
-        </>
-      }
-    >
+    <>
       <form onSubmit={submit} className="space-y-4" noValidate>
         <Field label="Email" type="email" inputMode="email" autoComplete="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
         <PasswordField value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} autoComplete="current-password" />
         {error && <Banner tone="alert">{error}</Banner>}
-        <Button type="submit" block size="lg" disabled={busy || !form.email || !form.password}>
-          {busy ? "Masuk…" : "Masuk"}
-        </Button>
+        <div>
+          <MissingHint items={[!form.email && "email", !form.password && "kata sandi"]} />
+          <Button type="submit" block size="lg" disabled={busy || !form.email || !form.password}>
+            {busy ? "Masuk…" : "Masuk"}
+          </Button>
+        </div>
       </form>
       {USE_MOCK_API && (
         <p className="mt-4 rounded-2xl bg-sunken p-3 text-[13px] text-muted">
           Mode demo: akun tersimpan di browser ini. Daftar dulu, lalu masuk dengan email yang sama.
         </p>
       )}
-    </AuthLayout>
+    </>
   );
 }
 
-export function Register() {
+export function RegisterForm({ onDone, submitLabel = "Buat akun" }) {
   const { register } = useAuth();
-  const { navigate } = useRouter();
-  const toast = useToast();
   const [form, setForm] = useState({ name: "", email: "", password: "", consent: false, understand: false });
   const [errors, setErrors] = useState({});
   const [error, setError] = useState("");
@@ -127,15 +114,68 @@ export function Register() {
     setBusy(true);
     setError("");
     try {
-      await register({ name: form.name.trim(), email: form.email.trim().toLowerCase(), password: form.password, consent: form.consent });
-      toast("Akun dibuat");
-      navigate("/", { replace: true });
+      const user = await register({ name: form.name.trim(), email: form.email.trim().toLowerCase(), password: form.password, consent: form.consent });
+      onDone(user);
     } catch (err) {
       setError(err.message);
       setBusy(false);
     }
   };
 
+  return (
+    <form onSubmit={submit} className="space-y-4" noValidate>
+      <Field label="Nama" autoComplete="name" value={form.name} onChange={(e) => set({ name: e.target.value })} error={errors.name} />
+      <Field label="Email" type="email" inputMode="email" autoComplete="email" value={form.email} onChange={(e) => set({ email: e.target.value })} error={errors.email} />
+      <PasswordField value={form.password} onChange={(e) => set({ password: e.target.value })} hint="Minimal 8 karakter" error={errors.password} autoComplete="new-password" />
+      <div className="space-y-3 rounded-2xl border border-line bg-surface p-4">
+        <Checkbox checked={form.consent} onChange={(consent) => set({ consent })}>
+          Saya setuju LukaCare menyimpan foto dan catatan luka saya untuk keperluan pemantauan. Data ini diperlakukan sebagai data pribadi
+          yang bersifat spesifik sesuai UU Pelindungan Data Pribadi.
+        </Checkbox>
+        <Checkbox checked={form.understand} onChange={(understand) => set({ understand })}>
+          Saya mengerti LukaCare memberi panduan perawatan dasar, bukan diagnosis medis.
+        </Checkbox>
+      </div>
+      {error && <Banner tone="alert">{error}</Banner>}
+      <div>
+        <MissingHint items={[(!form.consent || !form.understand) && "centang kedua persetujuan di atas"]} />
+        <Button type="submit" block size="lg" disabled={busy || !form.consent || !form.understand}>
+          {busy ? "Membuat akun…" : submitLabel}
+        </Button>
+      </div>
+    </form>
+  );
+}
+
+export function Login() {
+  const { navigate } = useRouter();
+  const toast = useToast();
+  return (
+    <AuthLayout
+      title="Masuk"
+      lead="Masuk untuk menyimpan riwayat luka dan pesanan ke akun Anda."
+      footer={
+        <>
+          Belum punya akun?{" "}
+          <Link to="/daftar" className="font-semibold text-pine">
+            Daftar
+          </Link>
+        </>
+      }
+    >
+      <LoginForm
+        onDone={(user) => {
+          toast(`Selamat datang kembali, ${user.name.split(" ")[0]}`);
+          navigate("/", { replace: true });
+        }}
+      />
+    </AuthLayout>
+  );
+}
+
+export function Register() {
+  const { navigate } = useRouter();
+  const toast = useToast();
   return (
     <AuthLayout
       title="Buat akun"
@@ -149,24 +189,12 @@ export function Register() {
         </>
       }
     >
-      <form onSubmit={submit} className="space-y-4" noValidate>
-        <Field label="Nama" autoComplete="name" value={form.name} onChange={(e) => set({ name: e.target.value })} error={errors.name} />
-        <Field label="Email" type="email" inputMode="email" autoComplete="email" value={form.email} onChange={(e) => set({ email: e.target.value })} error={errors.email} />
-        <PasswordField value={form.password} onChange={(e) => set({ password: e.target.value })} hint="Minimal 8 karakter" error={errors.password} autoComplete="new-password" />
-        <div className="space-y-3 rounded-2xl border border-line bg-surface p-4">
-          <Checkbox checked={form.consent} onChange={(consent) => set({ consent })}>
-            Saya setuju LukaCare menyimpan foto dan catatan luka saya untuk keperluan pemantauan. Data ini diperlakukan sebagai data pribadi
-            yang bersifat spesifik sesuai UU Pelindungan Data Pribadi.
-          </Checkbox>
-          <Checkbox checked={form.understand} onChange={(understand) => set({ understand })}>
-            Saya mengerti LukaCare memberi panduan perawatan dasar, bukan diagnosis medis.
-          </Checkbox>
-        </div>
-        {error && <Banner tone="alert">{error}</Banner>}
-        <Button type="submit" block size="lg" disabled={busy || !form.consent || !form.understand}>
-          {busy ? "Membuat akun…" : "Buat akun"}
-        </Button>
-      </form>
+      <RegisterForm
+        onDone={() => {
+          toast("Akun dibuat");
+          navigate("/", { replace: true });
+        }}
+      />
     </AuthLayout>
   );
 }

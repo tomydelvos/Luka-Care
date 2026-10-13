@@ -2,7 +2,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { LuArrowLeft, LuX, LuCheck, LuPhone, LuCircleHelp } from "react-icons/lu";
 import { Link, useRouter } from "../lib/router";
 import { cx } from "../lib/cx";
-import { Button, ChoiceGroup, Toggle, Banner, Field, Badge } from "../components/ui";
+import { Button, ChoiceGroup, Toggle, Banner, Field, Badge, MissingHint, Sheet } from "../components/ui";
+import { LoginForm, RegisterForm } from "./Auth";
 import { WoundArt } from "../components/art";
 import { StepTimer } from "../components/StepTimer";
 import { EscalationView } from "../components/EscalationView";
@@ -206,7 +207,7 @@ function CareSteps({ steps, done, onDone, onEscalate }) {
 export default function Guide() {
   const { query, navigate } = useRouter();
   const { user } = useAuth();
-  const { create } = useWounds();
+  const { create, loadedFor } = useWounds();
   const toast = useToast();
   const headingRef = useRef(null);
 
@@ -220,6 +221,10 @@ export default function Guide() {
   const [openProduct, setOpenProduct] = useState(null);
   const [save, setSave] = useState({ title: "", photo: null, pain: null });
   const [saving, setSaving] = useState(false);
+  // Pengguna yang belum masuk diminta daftar (atau masuk) sebelum luka disimpan.
+  // Isian langkah ini tetap ada di state selama Sheet terbuka.
+  const [authMode, setAuthMode] = useState(null);
+  const [saveAfterAuth, setSaveAfterAuth] = useState(false);
 
   const guide = type ? WOUND_GUIDES[type] : null;
   const careSteps = useMemo(() => (guide ? guide.steps(details) : []), [guide, details]);
@@ -281,6 +286,16 @@ export default function Guide() {
       setSaving(false);
     }
   };
+
+  // Setelah daftar/masuk lewat Sheet, simpan begitu data akun baru selesai dimuat.
+  useEffect(() => {
+    if (saveAfterAuth && user && loadedFor === user.id) {
+      setSaveAfterAuth(false);
+      saveWound();
+    }
+    // saveWound sengaja tidak dijadikan dependency: dibuat ulang tiap render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [saveAfterAuth, user, loadedFor]);
 
   const detailsReady = details.area && details.condition && details.size;
   const doneCount = careSteps.filter((s) => done[s.id]).length;
@@ -348,9 +363,14 @@ export default function Guide() {
       </>
     );
     footer = (
-      <Button block size="lg" onClick={toDetailsNext} disabled={!detailsReady}>
-        Lihat langkah perawatan
-      </Button>
+      <>
+        <MissingHint
+          items={[!details.area && "bagian tubuh", !details.condition && "kondisi luka", !details.size && "seberapa luas"]}
+        />
+        <Button block size="lg" onClick={toDetailsNext} disabled={!detailsReady}>
+          Lihat langkah perawatan
+        </Button>
+      </>
     );
   } else if (step === 3) {
     content = (
@@ -457,26 +477,31 @@ export default function Guide() {
           <PhotoPicker value={save.photo} onChange={(photo) => setSave((s) => ({ ...s, photo }))} />
           <PainScale value={save.pain} onChange={(pain) => setSave((s) => ({ ...s, pain }))} />
           {!user && (
-            <Banner tone="info" title="Belum masuk akun">
-              Catatan akan disimpan di perangkat ini saja.{" "}
-              <Link to="/daftar" className="font-semibold text-pine underline underline-offset-2">
-                Buat akun
-              </Link>{" "}
-              agar riwayat luka tersimpan aman dan bisa dibuka di perangkat lain.
+            <Banner tone="info" title="Buat akun untuk menyimpan">
+              Pemantauan luka butuh akun agar foto dan catatan tersimpan aman dan bisa dibuka di perangkat lain. Isian Anda di halaman ini
+              tidak hilang saat mendaftar.
             </Banner>
           )}
         </div>
       </>
     );
     footer = (
-      <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-        <Button variant="ghost" size="lg" onClick={() => navigate("/")}>
-          Selesai tanpa menyimpan
-        </Button>
-        <Button size="lg" onClick={saveWound} disabled={save.pain === null || saving} className="sm:min-w-64">
-          {saving ? "Menyimpan…" : "Simpan dan mulai pantau"}
-        </Button>
-      </div>
+      <>
+        <MissingHint items={[save.pain === null && "tingkat nyeri"]} className="sm:text-right" />
+        <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <Button variant="ghost" size="lg" onClick={() => navigate("/")}>
+            Selesai tanpa menyimpan
+          </Button>
+          <Button
+            size="lg"
+            onClick={user ? saveWound : () => setAuthMode("daftar")}
+            disabled={save.pain === null || saving}
+            className="sm:min-w-64"
+          >
+            {saving ? "Menyimpan…" : user ? "Simpan dan mulai pantau" : "Buat akun dan simpan"}
+          </Button>
+        </div>
+      </>
     );
   }
 
@@ -513,10 +538,48 @@ export default function Guide() {
         </div>
       </header>
 
-      <main className={cx("mx-auto max-w-2xl px-4 pt-7 sm:px-6", footer ? "pb-40" : "pb-16")}>
+      <main className={cx("mx-auto max-w-2xl px-4 pt-7 sm:px-6", footer ? "pb-48" : "pb-16")}>
         {content}
         {!escalation && step >= 3 && <Disclaimer className="mt-10" />}
       </main>
+
+      <Sheet
+        open={Boolean(authMode)}
+        onClose={() => setAuthMode(null)}
+        title={authMode === "masuk" ? "Masuk untuk menyimpan" : "Buat akun untuk menyimpan"}
+      >
+        <p className="mb-5 text-[15px] text-muted">
+          {authMode === "masuk"
+            ? "Setelah masuk, luka ini langsung disimpan ke akun Anda."
+            : "Setelah akun dibuat, luka ini langsung disimpan dan bisa Anda pantau setiap hari."}
+        </p>
+        {authMode === "masuk" ? (
+          <LoginForm
+            onDone={() => {
+              setAuthMode(null);
+              setSaveAfterAuth(true);
+            }}
+          />
+        ) : (
+          <RegisterForm
+            submitLabel="Buat akun dan simpan luka"
+            onDone={() => {
+              setAuthMode(null);
+              setSaveAfterAuth(true);
+            }}
+          />
+        )}
+        <p className="mt-5 text-center text-[15px] text-muted">
+          {authMode === "masuk" ? "Belum punya akun? " : "Sudah punya akun? "}
+          <button
+            type="button"
+            className="min-h-11 font-semibold text-pine"
+            onClick={() => setAuthMode(authMode === "masuk" ? "daftar" : "masuk")}
+          >
+            {authMode === "masuk" ? "Daftar" : "Masuk"}
+          </button>
+        </p>
+      </Sheet>
 
       {footer && (
         <div className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface/95 backdrop-blur-md">

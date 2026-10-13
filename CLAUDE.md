@@ -7,23 +7,37 @@ LukaCare adalah web app pendamping perawatan luka ringan untuk pengguna Indonesi
 ```bash
 cd apps/web
 npm install
-npm run dev              # http://localhost:3001
+npm run dev              # http://localhost:3001, butuh API lokal di :8787 (lihat di bawah)
 npm run build            # output ke apps/web/dist
 npm run build:staging    # pakai .env.staging
 npm run deploy:staging   # wrangler → staging.lukacare.com
 ```
 
-Di Mac tanpa Terminal: klik kanan `jalankan-lukacare.command` di root repo → Open. Skrip mengecek Node.js ≥ 20, menjalankan `npm install` sekali, lalu `npm run dev -- --open`.
+Di Mac tanpa Terminal: klik kanan `jalankan-lukacare.command` di root repo → Open. Skrip mengecek Node.js ≥ 20, menyiapkan dan menyalakan API lokal (port 8787), lalu web (`npm run dev -- --open`).
 
-Belum ada linter, test, maupun TypeScript. Kalau menambahkannya, tambahkan juga script-nya di `package.json` dan perbarui bagian ini.
+API (`apps/api`, lihat `apps/api/README.md`):
+
+```bash
+cd apps/api
+npm ci
+cp .dev.vars.example .dev.vars
+npm run db:migrate:local
+npm run dev              # http://localhost:8787
+npm test                 # Vitest di runtime Workers (D1 + R2 lokal)
+```
+
+Frontend belum punya linter maupun test; API punya test Vitest. Kalau menambahkan tooling, tambahkan juga script-nya di `package.json` dan perbarui bagian ini.
 
 ## Status saat ini
 
 - Frontend React 19 + Vite 7 + Tailwind CSS v4 di `apps/web`, semua halaman sudah ada (lihat tabel rute di README).
-- Semua data masih mock (`VITE_USE_MOCK_API=true`): luka, akun, dan keranjang disimpan di `localStorage` dengan prefix `lukacare:`.
+- Development memakai API lokal (`VITE_USE_MOCK_API=false` di `.env.development`); staging dan production masih mock (`true`) sampai API di-deploy. Di mode mock, luka dan akun disimpan di `localStorage` (prefix `lukacare:`). Keranjang selalu di `localStorage`.
+- Di mode API: sesi yang ditolak server (401) otomatis dihapus dan pengguna diminta masuk lagi (`SESSION_EXPIRED_EVENT` di `services/http.js`); unduh/hapus data memakai `services/accountService.js` (`GET /me/export`, `DELETE /me`); tombol data contoh hanya ada di mode mock.
 - Checkout masih demo, tanpa pembayaran sungguhan.
+- Menyimpan luka untuk dipantau butuh akun: di langkah 6 `/panduan`, pengguna yang belum masuk diminta daftar atau masuk lewat `Sheet` (form dari `pages/Auth.jsx`), lalu luka langsung disimpan. Langkah 1–5 tetap tanpa login (aturan produk no. 4).
+- Galeri foto di `/pantau/:id` (`src/components/PhotoGallery.jsx`) dibatasi `MAX_GALLERY_PHOTOS` = 3 per luka, terpisah dari foto catatan harian.
 - Katalog produk di `src/data/products.js` masih contoh dengan nama generik.
-- Backend (`apps/api`: Cloudflare Worker + D1 + R2) belum dibuat. Kontraknya sudah ditulis di `src/services/woundService.js`, `authService.js`, dan README.
+- Backend `apps/api` (Hono di Cloudflare Worker + D1 + R2) sudah ada dan teruji, tapi belum di-deploy. Kontraknya sama dengan `src/services/woundService.js` dan `authService.js`; ubah keduanya bersamaan. Batas galeri (`MAX_GALLERY_PHOTOS`) didefinisikan di frontend dan di `apps/api/src/routes/wounds.js`.
 
 ## Aturan produk (jangan dilanggar tanpa diskusi)
 
@@ -51,7 +65,9 @@ Belum ada linter, test, maupun TypeScript. Kalau menambahkannya, tambahkan juga 
 
 - [ ] Review konten medis oleh tenaga kesehatan
 - [ ] Tambah ESLint dan beberapa test (Vitest + Testing Library) untuk `assessDetails`, `checkinWarnings`, dan alur panduan
-- [ ] `apps/api`: Worker + D1 (`users`, `wounds`, `wound_examinations`, `wound_photos`) + R2, lalu set `VITE_USE_MOCK_API=false`
+- [x] `apps/api`: Worker + D1 (`users`, `wounds`, `wound_examinations`, `wound_photos`) + R2
+- [x] Sambungkan frontend ke API (development) dan alur simpan luka tanpa login (minta daftar di langkah 6)
+- [ ] Deploy API ke staging/production, lalu set `VITE_USE_MOCK_API=false` di `.env.staging` dan `.env.production`
 - [ ] Ganti katalog contoh dengan data mitra apotek, integrasi pembayaran
 - [ ] Pengingat harian (Web Push) untuk catat kondisi luka
 - [ ] GitHub Actions: deploy staging otomatis dari `main`

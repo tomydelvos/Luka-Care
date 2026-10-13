@@ -2,8 +2,8 @@ import { useEffect, useState } from "react";
 import { LuDownload, LuLogOut, LuTrash2, LuShieldCheck } from "react-icons/lu";
 import { useRouter } from "../lib/router";
 import { Button, PageHeader, Sheet } from "../components/ui";
-import { useAuth, useToast, useWounds, wipeLocalData } from "../store/AppProviders";
-import { exportAll } from "../lib/storage";
+import { deleteAllData, useAuth, useToast, useWounds } from "../store/AppProviders";
+import { accountService } from "../services/accountService";
 import { formatDate } from "../lib/format";
 import { APP_ENV, API_URL, USE_MOCK_API } from "../config/env";
 
@@ -13,6 +13,7 @@ export default function Account() {
   const { navigate } = useRouter();
   const toast = useToast();
   const [confirmWipe, setConfirmWipe] = useState(false);
+  const [busy, setBusy] = useState(null);
 
   useEffect(() => {
     if (!user) navigate("/masuk", { replace: true });
@@ -20,9 +21,17 @@ export default function Account() {
 
   if (!user) return null;
 
-  const download = () => {
-    const data = exportAll();
-    delete data["mock-users"];
+  const download = async () => {
+    setBusy("unduh");
+    let data;
+    try {
+      data = await accountService.exportData();
+    } catch (err) {
+      toast(err.message, "alert");
+      return;
+    } finally {
+      setBusy(null);
+    }
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -56,9 +65,9 @@ export default function Account() {
         </p>
         <p className="tabular mt-3 text-[15px]">{wounds.length} catatan luka tersimpan.</p>
         <div className="mt-4 flex flex-col gap-2 sm:flex-row">
-          <Button variant="secondary" onClick={download}>
+          <Button variant="secondary" onClick={download} disabled={busy === "unduh"}>
             <LuDownload size={18} aria-hidden="true" />
-            Unduh data saya
+            {busy === "unduh" ? "Menyiapkan data…" : "Unduh data saya"}
           </Button>
           <Button variant="danger-ghost" onClick={() => setConfirmWipe(true)}>
             <LuTrash2 size={18} aria-hidden="true" />
@@ -93,14 +102,28 @@ export default function Account() {
             <Button variant="ghost" onClick={() => setConfirmWipe(false)}>
               Batal
             </Button>
-            <Button variant="danger" onClick={wipeLocalData}>
-              Hapus semua
+            <Button
+              variant="danger"
+              disabled={busy === "hapus"}
+              onClick={async () => {
+                setBusy("hapus");
+                try {
+                  await deleteAllData();
+                } catch (err) {
+                  toast(err.message, "alert");
+                  setBusy(null);
+                }
+              }}
+            >
+              {busy === "hapus" ? "Menghapus…" : "Hapus semua"}
             </Button>
           </div>
         }
       >
         <p className="text-[15px] text-ink-soft">
-          Akun demo, catatan luka, foto, dan keranjang di perangkat ini akan dihapus permanen.
+          {USE_MOCK_API
+            ? "Akun demo, catatan luka, foto, dan keranjang di perangkat ini akan dihapus permanen."
+            : "Akun Anda beserta semua catatan luka dan foto di server LukaCare akan dihapus permanen, begitu juga keranjang di perangkat ini. Tindakan ini tidak bisa dibatalkan."}
         </p>
       </Sheet>
     </div>

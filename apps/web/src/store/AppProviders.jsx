@@ -1,6 +1,8 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { authService } from "../services/authService";
 import { woundService } from "../services/woundService";
+import { accountService } from "../services/accountService";
+import { SESSION_EXPIRED_EVENT } from "../services/http";
 import { sampleWounds } from "../services/sample";
 import { readJSON, writeJSON, clearAll } from "../lib/storage";
 import { PRODUCT_BY_ID } from "../data/products";
@@ -41,6 +43,18 @@ function ToastProvider({ children }) {
 /* ---------- Auth ---------- */
 function AuthProvider({ children }) {
   const [session, setSession] = useState(() => authService.current());
+  const toast = useToast();
+
+  // Token ditolak server (kedaluwarsa atau akun dihapus di perangkat lain).
+  useEffect(() => {
+    const onExpired = () => {
+      setSession(null);
+      toast("Sesi Anda sudah berakhir. Silakan masuk lagi.", "alert");
+    };
+    window.addEventListener(SESSION_EXPIRED_EVENT, onExpired);
+    return () => window.removeEventListener(SESSION_EXPIRED_EVENT, onExpired);
+  }, [toast]);
+
   const value = useMemo(
     () => ({
       user: session?.user ?? null,
@@ -66,26 +80,38 @@ function AuthProvider({ children }) {
 
 /* ---------- Wounds ---------- */
 function WoundProvider({ children }) {
+  const { user } = useAuth();
+  const userId = user?.id ?? null;
   const [wounds, setWounds] = useState([]);
   const [loading, setLoading] = useState(true);
+  // Akun yang datanya sudah dimuat. Dipakai agar penyimpanan setelah login
+  // menunggu muat ulang selesai, sehingga luka baru tidak tertimpa daftar lama.
+  const [loadedFor, setLoadedFor] = useState(undefined);
 
+  // Muat ulang setiap kali pengguna masuk, keluar, atau berganti akun.
   useEffect(() => {
     let alive = true;
+    setLoading(true);
     woundService
       .list()
       .then((list) => alive && setWounds(list))
       .catch(() => alive && setWounds([]))
-      .finally(() => alive && setLoading(false));
+      .finally(() => {
+        if (!alive) return;
+        setLoading(false);
+        setLoadedFor(userId);
+      });
     return () => {
       alive = false;
     };
-  }, []);
+  }, [userId]);
 
   const value = useMemo(() => {
     const replace = (updated) => setWounds((prev) => prev.map((w) => (w.id === updated.id ? updated : w)));
     return {
       wounds,
       loading,
+      loadedFor,
       getById: (id) => wounds.find((w) => w.id === id),
       async create(input, firstCheckin) {
         let wound = await woundService.create(input);
@@ -98,6 +124,16 @@ function WoundProvider({ children }) {
       },
       async addCheckin(id, input) {
         const updated = await woundService.addCheckin(id, input);
+        replace(updated);
+        return updated;
+      },
+      async addPhotos(id, sources) {
+        const updated = await woundService.addPhotos(id, sources);
+        replace(updated);
+        return updated;
+      },
+      async removePhoto(id, photoId) {
+        const updated = await woundService.removePhoto(id, photoId);
         replace(updated);
         return updated;
       },
@@ -116,7 +152,7 @@ function WoundProvider({ children }) {
         setWounds(list);
       },
     };
-  }, [wounds, loading]);
+  }, [wounds, loading, loadedFor]);
 
   return <WoundContext.Provider value={value}>{children}</WoundContext.Provider>;
 }
@@ -178,7 +214,9 @@ export const useWounds = () => useCtx(WoundContext, "useWounds");
 export const useCart = () => useCtx(CartContext, "useCart");
 export const useToast = () => useCtx(ToastContext, "useToast");
 
-export function wipeLocalData() {
+// Hapus semua data pengguna (server bila memakai API, lalu perangkat ini) dan mulai ulang app.
+export async function deleteAllData() {
+  await accountService.deleteAll();
   clearAll();
-  window.location.reload();
+  window.location.assign("/");
 }
