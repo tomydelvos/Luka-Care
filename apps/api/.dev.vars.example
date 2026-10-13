@@ -1,0 +1,10 @@
+# Salin ke .dev.vars untuk `npm run dev`. File .dev.vars tidak di-commit.
+# Dipakai untuk menandatangani URL unggah/lihat foto saat R2_ACCESS_KEY_ID kosong (mode lokal).
+FILE_SIGNING_SECRET=ganti-dengan-string-acak-panjang
+# Wajib untuk dev lokal: URL foto harus menunjuk ke wrangler dev, bukan api.lukacare.com.
+PUBLIC_API_URL=http://localhost:8787
+
+# Isi keduanya (dan R2_ACCOUNT_ID di wrangler.jsonc) agar foto diunggah langsung ke R2
+# lewat presigned URL, tanpa melewati Worker.
+# R2_ACCESS_KEY_ID=
+# R2_SECRET_ACCESS_KEY=

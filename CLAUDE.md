@@ -15,7 +15,18 @@ npm run deploy:staging   # wrangler → staging.lukacare.com
 
 Di Mac tanpa Terminal: klik kanan `jalankan-lukacare.command` di root repo → Open. Skrip mengecek Node.js ≥ 20, menjalankan `npm install` sekali, lalu `npm run dev -- --open`.
 
-Belum ada linter, test, maupun TypeScript. Kalau menambahkannya, tambahkan juga script-nya di `package.json` dan perbarui bagian ini.
+API (`apps/api`, lihat `apps/api/README.md`):
+
+```bash
+cd apps/api
+npm ci
+cp .dev.vars.example .dev.vars
+npm run db:migrate:local
+npm run dev              # http://localhost:8787
+npm test                 # Vitest di runtime Workers (D1 + R2 lokal)
+```
+
+Frontend belum punya linter maupun test; API punya test Vitest. Kalau menambahkan tooling, tambahkan juga script-nya di `package.json` dan perbarui bagian ini.
 
 ## Status saat ini
 
@@ -25,7 +36,7 @@ Belum ada linter, test, maupun TypeScript. Kalau menambahkannya, tambahkan juga 
 - Menyimpan luka untuk dipantau butuh akun: di langkah 6 `/panduan`, pengguna yang belum masuk diminta daftar atau masuk lewat `Sheet` (form dari `pages/Auth.jsx`), lalu luka langsung disimpan. Langkah 1–5 tetap tanpa login (aturan produk no. 4).
 - Galeri foto di `/pantau/:id` (`src/components/PhotoGallery.jsx`) dibatasi `MAX_GALLERY_PHOTOS` = 3 per luka, terpisah dari foto catatan harian.
 - Katalog produk di `src/data/products.js` masih contoh dengan nama generik.
-- Backend (`apps/api`: Cloudflare Worker + D1 + R2) belum dibuat. Kontraknya sudah ditulis di `src/services/woundService.js`, `authService.js`, dan README.
+- Backend `apps/api` (Hono di Cloudflare Worker + D1 + R2) sudah ada dan teruji, tapi belum di-deploy dan frontend masih memakai mock. Kontraknya sama dengan `src/services/woundService.js` dan `authService.js`; ubah keduanya bersamaan. Batas galeri (`MAX_GALLERY_PHOTOS`) didefinisikan di frontend dan di `apps/api/src/routes/wounds.js`.
 
 ## Aturan produk (jangan dilanggar tanpa diskusi)
 
@@ -53,7 +64,8 @@ Belum ada linter, test, maupun TypeScript. Kalau menambahkannya, tambahkan juga 
 
 - [ ] Review konten medis oleh tenaga kesehatan
 - [ ] Tambah ESLint dan beberapa test (Vitest + Testing Library) untuk `assessDetails`, `checkinWarnings`, dan alur panduan
-- [ ] `apps/api`: Worker + D1 (`users`, `wounds`, `wound_examinations`, `wound_photos`) + R2, lalu set `VITE_USE_MOCK_API=false`
+- [x] `apps/api`: Worker + D1 (`users`, `wounds`, `wound_examinations`, `wound_photos`) + R2
+- [ ] Sambungkan frontend ke API (`VITE_USE_MOCK_API=false`), tentukan alur simpan luka tanpa login, deploy API ke staging
 - [ ] Ganti katalog contoh dengan data mitra apotek, integrasi pembayaran
 - [ ] Pengingat harian (Web Push) untuk catat kondisi luka
 - [ ] GitHub Actions: deploy staging otomatis dari `main`

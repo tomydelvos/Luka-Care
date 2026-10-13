@@ -2,11 +2,12 @@
 
 Aplikasi web pendamping perawatan luka ringan: panduan pertolongan pertama langkah demi langkah, catatan pemulihan harian dengan foto, dan belanja perlengkapan P3K.
 
-Repo ini baru berisi frontend (`apps/web`). Backend API (`apps/api`, Cloudflare Worker + D1 + R2) menyusul dengan kontrak data yang sudah disiapkan di `src/services`.
+Frontend ada di `apps/web`, backend API (Cloudflare Worker + D1 + R2) di `apps/api`. Lihat `apps/api/README.md` untuk endpoint, test, dan deploy API.
 
 ```
 lukacare/
 ├── apps/
+│   ├── api/                  API Cloudflare Worker (Hono) + D1 + R2, test Vitest
 │   └── web/                  Frontend React (Vite + Tailwind CSS v4)
 │       ├── public/           favicon
 │       ├── src/
@@ -122,7 +123,8 @@ Foto dan catatan luka termasuk data kesehatan, yang dalam UU No. 27 Tahun 2022 (
 ## Langkah berikutnya
 
 - [ ] Review konten medis oleh tenaga kesehatan
-- [ ] `apps/api`: Worker + D1 (`users`, `wounds`, `wound_examinations`, `wound_photos`) + R2
+- [x] `apps/api`: Worker + D1 (`users`, `wounds`, `wound_examinations`, `wound_photos`) + R2
+- [ ] Sambungkan frontend ke API (`VITE_USE_MOCK_API=false`) dan deploy API ke staging
 - [ ] Ganti katalog contoh dengan data mitra apotek dan integrasi pembayaran
 - [ ] Pengingat harian (Web Push) untuk catat kondisi luka
 - [ ] GitHub Actions: deploy staging otomatis dari branch `main`

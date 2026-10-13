@@ -1,0 +1,39 @@
+// API LukaCare: Cloudflare Worker + D1 (data) + R2 (foto luka, bucket privat).
+// - Lokal:      npm run dev                 → http://localhost:8787 (D1 & R2 disimulasikan)
+// - Staging:    npm run deploy:staging      → api-staging.lukacare.com
+// - Production: npm run deploy:production   → api.lukacare.com
+// Ganti database_id dengan hasil `wrangler d1 create lukacare` (dan lukacare-staging).
+// Secret (jangan ditulis di sini): wrangler secret put FILE_SIGNING_SECRET / R2_ACCESS_KEY_ID / R2_SECRET_ACCESS_KEY
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "lukacare-api",
+  "main": "src/index.js",
+  "compatibility_date": "2026-10-01",
+  "vars": {
+    "ALLOWED_ORIGINS": "http://localhost:3001,https://lukacare.com",
+    "PUBLIC_API_URL": "https://api.lukacare.com",
+    "R2_ACCOUNT_ID": "",
+    "R2_BUCKET": "lukacare-photos"
+  },
+  "d1_databases": [
+    { "binding": "DB", "database_name": "lukacare", "database_id": "00000000-0000-0000-0000-000000000000", "migrations_dir": "migrations" }
+  ],
+  "r2_buckets": [{ "binding": "PHOTOS", "bucket_name": "lukacare-photos" }],
+  "routes": [{ "pattern": "api.lukacare.com", "custom_domain": true }],
+  "env": {
+    "staging": {
+      "name": "lukacare-api-staging",
+      "vars": {
+        "ALLOWED_ORIGINS": "http://localhost:3001,https://staging.lukacare.com",
+        "PUBLIC_API_URL": "https://api-staging.lukacare.com",
+        "R2_ACCOUNT_ID": "",
+        "R2_BUCKET": "lukacare-photos-staging"
+      },
+      "d1_databases": [
+        { "binding": "DB", "database_name": "lukacare-staging", "database_id": "00000000-0000-0000-0000-000000000000", "migrations_dir": "migrations" }
+      ],
+      "r2_buckets": [{ "binding": "PHOTOS", "bucket_name": "lukacare-photos-staging" }],
+      "routes": [{ "pattern": "api-staging.lukacare.com", "custom_domain": true }]
+    }
+  }
+}
