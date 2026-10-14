@@ -47,6 +47,7 @@ cd apps/api
 npm ci
 cp .dev.vars.example .dev.vars   # ganti FILE_SIGNING_SECRET dengan string acak
 npm run db:migrate:local
+npm run db:seed:local            # akun demo: demo@lukacare.test / lukacare123
 npm run dev                      # http://localhost:8787
 
 # Terminal 2: web
@@ -56,6 +57,8 @@ npm run dev                      # http://localhost:3001
 ```
 
 Data lokal (akun, luka, foto) tersimpan di `apps/api/.wrangler/`.
+
+**Masuk di lokal:** pakai akun demo `demo@lukacare.test` / `lukacare123` (tombol "Isi otomatis" ada di `/masuk`), atau daftar akun baru. Akun baru harus memasukkan kode verifikasi 6 digit. Belum ada pengiriman email: di lokal kode ditampilkan di layar (`DEV_EXPOSE_CODES=true` di `.dev.vars`) dan ditulis di log API.
 
 **Tanpa backend (mode demo):** jalankan `VITE_USE_MOCK_API=true npm run dev` di `apps/web`. Semua data disimpan di `localStorage`, dan di halaman **Pantau** ada tombol "Lihat dengan data contoh".
 
@@ -95,8 +98,10 @@ Semua `VITE_*` ikut ter-bundle ke browser. Jangan taruh secret di sini; secret m
 `src/services/woundService.js` dan `authService.js` punya dua implementasi dengan bentuk data yang sama: mock (localStorage) dan HTTP. Endpoint yang diharapkan dari Worker:
 
 ```
-POST   /auth/register          { name, email, password, consent } → { token, user }
-POST   /auth/login             { email, password }                → { token, user }
+POST   /auth/register          { name, email, password, consent } → { verification }
+POST   /auth/login             { email, password }                → { token, user } | { verification }
+POST   /auth/verify            { email, code }                    → { token, user }
+POST   /auth/resend            { email }                          → { verification }
 POST   /auth/logout
 
 GET    /wounds

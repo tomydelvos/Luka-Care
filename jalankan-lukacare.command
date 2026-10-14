@@ -33,7 +33,10 @@ if [ ! -f .dev.vars ]; then
   secret=$(node -e 'console.log(require("crypto").randomBytes(32).toString("hex"))')
   sed "s/^FILE_SIGNING_SECRET=.*/FILE_SIGNING_SECRET=$secret/" .dev.vars.example > .dev.vars
 fi
+# .dev.vars lama (sebelum ada verifikasi email) belum punya baris ini.
+grep -q '^DEV_EXPOSE_CODES=' .dev.vars || printf '\nDEV_EXPOSE_CODES=true\n' >> .dev.vars
 npm run db:migrate:local >/dev/null 2>&1 || { echo "Migrasi database lokal gagal."; pause_and_exit; }
+npm run db:seed:local 2>/dev/null | grep "Akun demo" || { echo "Gagal membuat akun demo."; pause_and_exit; }
 
 echo "Menyalakan API di http://localhost:8787 ..."
 npm run dev -- --port 8787 > "$ROOT/apps/api/.wrangler-dev.log" 2>&1 &
@@ -58,6 +61,8 @@ fi
 
 echo ""
 echo "LukaCare berjalan. Browser akan terbuka otomatis."
+echo "Masuk dengan akun demo: demo@lukacare.test / lukacare123"
+echo "Kode verifikasi untuk akun baru tampil di layar (dan di apps/api/.wrangler-dev.log)."
 echo "Biarkan jendela ini terbuka. Tekan Ctrl+C untuk berhenti (API ikut berhenti)."
 echo ""
 npm run dev -- --open

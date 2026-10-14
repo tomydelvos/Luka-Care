@@ -2,16 +2,22 @@ import { describe, expect, it } from "vitest";
 import { call, registerUser } from "./helpers";
 
 describe("auth", () => {
-  it("mendaftar, masuk, dan keluar", async () => {
+  it("mendaftar, verifikasi email, masuk, dan keluar", async () => {
     const email = `budi-${Date.now()}@contoh.id`;
     const reg = await call("/auth/register", {
       method: "POST",
       body: { name: "Budi", email, password: "rahasia123", consent: true },
     });
     expect(reg.status).toBe(201);
-    expect(reg.json.data.user).toMatchObject({ name: "Budi", email });
-    expect(reg.json.data.user.consentAt).toBeTruthy();
-    expect(reg.json.data.user).not.toHaveProperty("password_hash");
+    expect(reg.json.data).not.toHaveProperty("token");
+    expect(reg.json.data.verification).toMatchObject({ email, devCode: expect.stringMatching(/^\d{6}$/) });
+
+    const verify = await call("/auth/verify", { method: "POST", body: { email, code: reg.json.data.verification.devCode } });
+    expect(verify.status).toBe(200);
+    expect(verify.json.data.user).toMatchObject({ name: "Budi", email });
+    expect(verify.json.data.user.consentAt).toBeTruthy();
+    expect(verify.json.data.user.emailVerifiedAt).toBeTruthy();
+    expect(verify.json.data.user).not.toHaveProperty("password_hash");
 
     const login = await call("/auth/login", { method: "POST", body: { email: email.toUpperCase(), password: "rahasia123" } });
     expect(login.status).toBe(200);

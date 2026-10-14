@@ -9,6 +9,7 @@ cd apps/api
 npm ci
 cp .dev.vars.example .dev.vars   # isi FILE_SIGNING_SECRET, biarkan PUBLIC_API_URL=http://localhost:8787
 npm run db:migrate:local
+npm run db:seed:local            # akun demo terverifikasi: demo@lukacare.test / lukacare123
 npm run dev                      # http://localhost:8787
 ```
 
@@ -25,7 +26,7 @@ VITE_USE_MOCK_API=false npm run dev   # http://localhost:3001 → http://localho
 npm test
 ```
 
-Test berjalan di runtime Workers (`@cloudflare/vitest-plugin`) dengan D1 dan R2 lokal: auth, isolasi data antar pengguna, catatan harian, unggah foto, batas galeri 3 foto, ekspor dan hapus data.
+Test berjalan di runtime Workers (`@cloudflare/vitest-plugin`) dengan D1 dan R2 lokal: auth, verifikasi email, isolasi data antar pengguna, catatan harian, unggah foto, batas galeri 3 foto, ekspor dan hapus data.
 
 ## Endpoint
 
@@ -33,8 +34,10 @@ Semua respons berbentuk `{ success: true, data }` atau `{ success: false, messag
 
 | Metode | Path | Isi |
 | --- | --- | --- |
-| POST | `/auth/register` | `{ name, email, password, consent: true }` → `{ token, user }` |
-| POST | `/auth/login` | `{ email, password }` → `{ token, user }` |
+| POST | `/auth/register` | `{ name, email, password, consent: true }` → `{ verification }`, kode dikirim ke email |
+| POST | `/auth/login` | `{ email, password }` → `{ token, user }`, atau `{ verification }` (kode baru) bila email belum diverifikasi |
+| POST | `/auth/verify` | `{ email, code }` → `{ token, user }` |
+| POST | `/auth/resend` | `{ email }` → `{ verification }`, jeda 60 detik antar permintaan |
 | POST | `/auth/logout` | Mencabut token sesi |
 | GET | `/me` | Profil pengguna |
 | GET | `/me/export` | Semua data pengguna (unduh data, UU PDP) |
@@ -76,9 +79,16 @@ Supaya browser bisa unggah langsung ke R2 (direkomendasikan):
 4. Pasang CORS bucket untuk `PUT`/`GET` dari `https://lukacare.com` (dan `https://staging.lukacare.com`) dengan header `Content-Type`:
    `npx wrangler r2 bucket cors set lukacare-photos --file r2-cors.json`
 
+## Verifikasi email
+
+Akun baru baru mendapat token setelah memasukkan kode 6 digit (`src/lib/verification.js`). Kode disimpan sebagai hash, berlaku 15 menit, maksimal 5 kali salah, lalu harus minta kode baru. `verification` berisi `{ email, resendAt }`, ditambah `devCode` bila `DEV_EXPOSE_CODES=true` (hanya untuk dev lokal dan test).
+
+Belum ada penyedia email: kode hanya ditulis ke log Worker (`deliver()`). Sebelum staging/production, sambungkan penyedia email (mis. Resend atau Cloudflare Email) di `deliver()` dan jangan set `DEV_EXPOSE_CODES`.
+
 ## Belum ada
 
+- Pengiriman email kode verifikasi (lihat di atas).
 - Rate limit login/daftar (bisa pakai Cloudflare Rate Limiting rules atau binding `ratelimit`).
 - Reset kata sandi lewat email.
 - Pembersihan foto yang sudah diunggah tapi tidak pernah dipakai (pasang lifecycle rule R2, misalnya hapus objek > 1 hari di prefix yang belum tercatat).
-- Frontend masih `VITE_USE_MOCK_API=true`. Sebelum diganti, putuskan dulu cara menyimpan luka untuk pengguna yang belum login, karena API ini mewajibkan akun.
+

@@ -28,7 +28,7 @@ export async function requireUser(c, next) {
   const token = bearer(c);
   if (!token) throw new HttpError(401, "Silakan masuk untuk melanjutkan.");
   const user = await c.env.DB.prepare(
-    `SELECT u.id, u.name, u.email, u.consent_at, u.created_at
+    `SELECT u.id, u.name, u.email, u.consent_at, u.created_at, u.email_verified_at
        FROM sessions s JOIN users u ON u.id = s.user_id
       WHERE s.token_hash = ? AND s.expires_at > ?`
   )
@@ -44,5 +44,6 @@ export const publicUser = (u) => ({
   name: u.name,
   email: u.email,
   consentAt: u.consent_at,
+  emailVerifiedAt: u.email_verified_at ?? null,
   createdAt: u.created_at,
 });

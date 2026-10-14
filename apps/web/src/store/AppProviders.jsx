@@ -58,16 +58,24 @@ function AuthProvider({ children }) {
   const value = useMemo(
     () => ({
       user: session?.user ?? null,
+      // login/register mengembalikan { user } bila sudah masuk, atau { verification }
+      // bila email perlu diverifikasi dulu (lanjutkan dengan verify).
       async login(input) {
         const s = await authService.login(input);
-        setSession(s);
-        return s.user;
+        if (s.token) setSession(s);
+        return s;
       },
       async register(input) {
         const s = await authService.register(input);
+        if (s.token) setSession(s);
+        return s;
+      },
+      async verify(input) {
+        const s = await authService.verify(input);
         setSession(s);
         return s.user;
       },
+      resend: (input) => authService.resend(input),
       async logout() {
         await authService.logout();
         setSession(null);

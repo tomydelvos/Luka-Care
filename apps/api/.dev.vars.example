@@ -6,6 +6,10 @@ PUBLIC_API_URL=http://localhost:8787
 # Izinkan frontend dev di port berapa pun (Vite pindah port bila 3001 terpakai).
 ALLOWED_ORIGINS=http://localhost:*,http://127.0.0.1:*
 
+# Belum ada penyedia email: kode verifikasi ditulis ke log. Dengan nilai true kode juga
+# dikirim di respons API dan ditampilkan di layar. Hanya untuk dev lokal, jangan di staging/production.
+DEV_EXPOSE_CODES=true
+
 # Isi keduanya (dan R2_ACCOUNT_ID di wrangler.jsonc) agar foto diunggah langsung ke R2
 # lewat presigned URL, tanpa melewati Worker.
 # R2_ACCESS_KEY_ID=

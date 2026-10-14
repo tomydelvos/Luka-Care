@@ -3,8 +3,13 @@ import { hashPassword, verifyPassword } from "../lib/crypto";
 import { createSession, deleteSession, publicUser } from "../lib/auth";
 import { HttpError, newId, nowIso, ok, readBody } from "../lib/http";
 import { email, text } from "../lib/validate";
+import { checkCode, issueCode } from "../lib/verification";
 
+// Akun baru harus memverifikasi email dulu. Selama belum terverifikasi, register dan login
+// mengembalikan { verification } (tanpa token); token baru diberikan oleh POST /auth/verify.
 export const auth = new Hono();
+
+const findUser = (env, mail) => env.DB.prepare("SELECT * FROM users WHERE email = ?").bind(mail).first();
 
 auth.post("/register", async (c) => {
   const body = await readBody(c);
@@ -19,7 +24,7 @@ auth.post("/register", async (c) => {
     throw new HttpError(422, "Persetujuan pengolahan data kesehatan diperlukan untuk membuat akun.");
   }
 
-  const exists = await c.env.DB.prepare("SELECT 1 FROM users WHERE email = ?").bind(mail).first();
+  const exists = await findUser(c.env, mail);
   if (exists) throw new HttpError(409, "Email ini sudah terdaftar. Silakan masuk.");
 
   const now = nowIso();
@@ -30,18 +35,39 @@ auth.post("/register", async (c) => {
     .bind(user.id, user.name, user.email, await hashPassword(body.password), user.consent_at, user.created_at)
     .run();
 
-  const token = await createSession(c.env, user.id);
-  return ok(c, { token, user: publicUser(user) }, 201);
+  return ok(c, { verification: await issueCode(c.env, user) }, 201);
 });
 
 auth.post("/login", async (c) => {
   const body = await readBody(c);
   const wrong = new HttpError(401, "Email atau kata sandi salah.");
   if (typeof body.email !== "string" || typeof body.password !== "string") throw wrong;
-  const user = await c.env.DB.prepare("SELECT * FROM users WHERE email = ?").bind(body.email.trim().toLowerCase()).first();
+  const user = await findUser(c.env, body.email.trim().toLowerCase());
   if (!user || !(await verifyPassword(body.password, user.password_hash))) throw wrong;
+  if (!user.email_verified_at) return ok(c, { verification: await issueCode(c.env, user) });
   const token = await createSession(c.env, user.id);
   return ok(c, { token, user: publicUser(user) });
+});
+
+auth.post("/verify", async (c) => {
+  const body = await readBody(c);
+  const mail = email(body.email);
+  const user = await findUser(c.env, mail);
+  if (!user) throw new HttpError(400, "Kode verifikasi tidak ditemukan. Minta kode baru lalu coba lagi.");
+  if (user.email_verified_at) throw new HttpError(409, "Email ini sudah terverifikasi. Silakan masuk.");
+  const verified = await checkCode(c.env, user, typeof body.code === "string" ? body.code.trim() : body.code);
+  const token = await createSession(c.env, verified.id);
+  return ok(c, { token, user: publicUser(verified) });
+});
+
+// Kirim ulang kode. Untuk email yang tidak terdaftar respons tetap berhasil agar
+// endpoint ini tidak bisa dipakai menebak email siapa saja yang terdaftar.
+auth.post("/resend", async (c) => {
+  const body = await readBody(c);
+  const mail = email(body.email);
+  const user = await findUser(c.env, mail);
+  if (!user || user.email_verified_at) return ok(c, { verification: { email: mail } });
+  return ok(c, { verification: await issueCode(c.env, user, { cooldown: true }) });
 });
 
 auth.post("/logout", async (c) => {
