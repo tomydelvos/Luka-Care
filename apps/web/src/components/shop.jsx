@@ -2,7 +2,7 @@ import { LuPlus, LuCheck } from "react-icons/lu";
 import { ProductArt } from "./art";
 import { Button, QtyStepper, Sheet, Badge } from "./ui";
 import { CATEGORY_BY_ID } from "../data/products";
-import { WOUND_GUIDES } from "../data/woundGuides";
+import { WOUND_GUIDES } from "../content";
 import { formatRupiah } from "../lib/format";
 import { useCart, useToast } from "../store/AppProviders";
 import { cx } from "../lib/cx";

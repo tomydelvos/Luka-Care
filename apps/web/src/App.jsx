@@ -12,6 +12,7 @@ import Checkout from "./pages/Checkout";
 import Emergency from "./pages/Emergency";
 import { Login, Register } from "./pages/Auth";
 import Account from "./pages/Account";
+import Sources from "./pages/Sources";
 import NotFound from "./pages/NotFound";
 
 const ROUTES = [
@@ -26,6 +27,7 @@ const ROUTES = [
   { path: "/masuk", render: () => <Login /> },
   { path: "/daftar", render: () => <Register /> },
   { path: "/akun", render: () => <Account /> },
+  { path: "/sumber", render: () => <Sources /> },
 ];
 
 // Panduan dibuka dalam mode fokus: tanpa navigasi bawah agar pengguna

@@ -9,17 +9,19 @@ lukacare/
 ├── apps/
 │   ├── api/                  API Cloudflare Worker (Hono) + D1 + R2, test Vitest
 │   └── web/                  Frontend React (Vite + Tailwind CSS v4)
-│       ├── public/           favicon, illustrations/ (16 ilustrasi luka, kecil/ = WebP untuk kartu)
+│       ├── public/           favicon, illustrations/ (16 ilustrasi PNG; kecil/, potongan/, warna/ = WebP)
 │       ├── src/
 │       │   ├── config/       env.js — satu-satunya tempat membaca VITE_*
-│       │   ├── data/         konten panduan luka, tanda bahaya, katalog produk
+│       │   ├── content/      konten medis bersumber: panduan per jenis luka, tanda bahaya, contoh kasus, sumber
+│       │   ├── data/         data non-medis: katalog produk, profile kontak
 │       │   ├── lib/          router, storage, format, kompres foto
 │       │   ├── services/     authService, woundService (mock ↔ API)
 │       │   ├── store/        state global (auth, luka, keranjang, toast)
 │       │   ├── components/   UI dasar, layout, ilustrasi, timer
 │       │   └── pages/        Beranda, Panduan, Pantau, Belanja, Darurat, Akun
 │       ├── .env.*            development / staging / production
-│       ├── vite.config.js    dev server di port 3001
+│       ├── eslint.config.js  ESLint (npm run lint)
+│       ├── vite.config.js    dev server di port 3001, Vitest, gerbang konten production
 │       └── wrangler.jsonc    deploy ke Cloudflare (lukacare.com & staging)
 ├── docs/
 │   ├── prd-tahap-2.md        PRD tahap 2: konten berbasis riset di web
@@ -27,7 +29,7 @@ lukacare/
 │   ├── riset/                laporan riset warna luka dan waktu pulih + catatan
 │   └── catatan-prd-awal.txt  catatan diskusi PRD awal
 ├── tools/
-│   └── illustrations/        kode penggambar ilustrasi luka (SVG → PNG)
+│   └── illustrations/        kode penggambar ilustrasi luka (SVG → PNG, potongan WebP)
 ├── CLAUDE.md                 konteks dan aturan kerja untuk Claude Code
 └── README.md
 ```
@@ -59,6 +61,8 @@ npm run dev                      # http://localhost:8787
 cd apps/web
 npm install
 npm run dev                      # http://localhost:3001
+npm run lint                     # ESLint
+npm test                         # Vitest: konten, aturan penilaian, catatan harian
 ```
 
 Data lokal (akun, luka, foto) tersimpan di `apps/api/.wrangler/`.
@@ -77,6 +81,7 @@ Data lokal (akun, luka, foto) tersimpan di `apps/api/.wrangler/`.
 | `/belanja`, `/keranjang`, `/checkout` | Katalog per kategori, filter `?untuk=<jenis luka>`, keranjang, checkout (mode demo) |
 | `/darurat` | Nomor 119 dan 112, cari faskes terdekat, semua tanda bahaya beserta yang bisa dilakukan |
 | `/masuk`, `/daftar`, `/akun` | Autentikasi, persetujuan data kesehatan, unduh/hapus data |
+| `/sumber` | Semua rujukan konten medis per topik dan arti label asal data |
 
 ## Prinsip produk yang diterapkan
 
@@ -85,7 +90,7 @@ Data lokal (akun, luka, foto) tersimpan di `apps/api/.wrangler/`.
 3. **Tanpa login untuk pertolongan pertama.** Akun hanya dibutuhkan untuk menyimpan riwayat ke server.
 4. **Bukan diagnosis.** Catatan harian hanya dicocokkan dengan tanda bahaya umum (kemerahan melebar, nanah, demam, nyeri naik tajam) lalu disarankan periksa.
 
-> Konten di `src/data/woundGuides.js` dan `src/data/redFlags.js` adalah panduan pertolongan pertama umum. **Wajib ditinjau dokter atau perawat sebelum rilis production.**
+> Semua konten medis ada di `apps/web/src/content/`. Setiap blok membawa sumber (`sources.js`), label asal data (`A`/`B`/`K`/`F`/`I`), dan status tinjauan. **Wajib ditinjau dokter atau perawat sebelum rilis production:** `npm run build:production` sengaja gagal selama masih ada blok berstatus `draft`. Di staging, blok seperti itu diberi pita "Belum ditinjau klinisi".
 
 ## Environment
 
@@ -139,7 +144,7 @@ npm run deploy:production    # → https://lukacare.com
 Hubungkan repo GitHub, lalu isi:
 
 - Root directory: `apps/web`
-- Build command: `npm run build` (staging: `npm run build:staging`)
+- Build command: `npm run build:production` (staging: `npm run build:staging`). Build production gagal selama konten medis belum ditinjau.
 - Build output: `dist`
 
 Pages otomatis memperlakukan proyek tanpa `404.html` sebagai SPA.

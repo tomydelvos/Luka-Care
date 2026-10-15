@@ -112,7 +112,7 @@ Kriteria penerimaan:
 
 Langkah 3 panduan ("Detail luka") kini menampilkan bagian "Contoh kasus untuk dibaca": 10 kasus dari buku, satu per bab.
 
-- Data: `src/data/caseStories.js`. Komponen: `src/components/CaseStories.jsx`, dipakai ulang di `/pustaka` nanti.
+- Data: `src/content/caseStories.js`. Komponen: `src/components/CaseStories.jsx`, dipakai ulang di `/pustaka` nanti.
 - Urutan: kasus dengan kelompok yang sama dengan jenis luka pilihan pengguna tampil paling depan dan ditandai "Mirip luka Anda", lalu sisanya urut bab.
 - Filter per kelompok: Lecet, Sayatan & tusuk, Luka bakar, Lepuh, Gigitan hewan.
 - Kartu memuat gambar kecil tampak atas, jenis luka, tingkat penanganan (rawat di rumah atau perlu tenaga kesehatan), linimasa ringkas, dan hasil akhir. Kartu bisa digeser dan punya tombol sebelumnya/berikutnya.
@@ -120,7 +120,7 @@ Langkah 3 panduan ("Detail luka") kini menampilkan bagian "Contoh kasus untuk di
 - Bagian ini ditaruh di bawah formulir dengan catatan "Sedang menangani luka? Lanjutkan dulu ke langkah perawatan", agar tidak menghambat pertolongan pertama.
 - Gambar kecil WebP (4–12 KB) dibuat dengan `npm run thumbs` di `tools/illustrations` dan disimpan di `public/illustrations/kecil/`.
 
-Sisa pekerjaan: pindahkan isi `caseStories.js` ke `src/content/` saat F1, beri `sourceIds` dan status tinjauan per kasus, dan masukkan ke daftar tinjauan F10.
+Sudah dipindah ke `src/content/` di M1 dengan `sourceIds` per bab dan status `draft`. Sisa pekerjaan: masukkan ke daftar tinjauan F10.
 
 ### F3. Panduan yang memakai kedalaman dan ilustrasi (Wajib)
 
@@ -320,7 +320,7 @@ Kontrak API (`POST /wounds` dan `POST /wounds/:id/examinations`, lihat `apps/api
 
 | Tahap | Isi | Ukuran |
 | --- | --- | --- |
-| M1. Fondasi konten | F1, F8, potongan ilustrasi F9, test sumber | Sedang |
+| M1. Fondasi konten (selesai) | F1, F8, potongan ilustrasi F9, test sumber. `healing.js` dan `colors.js` dibuat di M3 bersama angkanya; tautan "Sumber" di halaman pustaka dibuat di M2 | Sedang |
 | M2. Pustaka | F2, ilustrasi di panduan (F3 bagian kartu dan langkah) | Sedang |
 | M3. Pemantauan | F4, F5, F6, migrasi data di `localStorage` dan D1, perubahan `apps/api` (Lampiran C) | Besar |
 | M4. Luka bakar dan rujukan | Penilaian luka bakar dan pertanyaan kedalaman (F3), `EscalationView` bergambar | Sedang |

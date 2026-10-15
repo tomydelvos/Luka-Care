@@ -6,6 +6,9 @@ export const API_URL = (env.VITE_API_URL || "http://localhost:8787").replace(/\/
 export const USE_MOCK_API = String(env.VITE_USE_MOCK_API ?? "true") !== "false";
 // Akun demo dibuat oleh `npm run db:seed:local` di apps/api; hanya ditampilkan saat dev lokal ke API.
 export const DEMO_ACCOUNT = Boolean(env.DEV) && !USE_MOCK_API ? { email: "demo@lukacare.test", password: "lukacare123" } : null;
+// Pita "Belum ditinjau klinisi" pada konten medis (PRD tahap 2, F1). Selalu tampil di staging;
+// di development bisa dinyalakan dengan VITE_SHOW_REVIEW=true.
+export const SHOW_REVIEW_RIBBON = APP_ENV === "staging" || env.VITE_SHOW_REVIEW === "true";
 export const ROUTER_MODE = ["hash", "memory"].includes(env.VITE_ROUTER_MODE) ? env.VITE_ROUTER_MODE : "history";
 
 // Awalan untuk file di `public/` (gambar ilustrasi). Vite mengisinya dari opsi `base`, default "/".

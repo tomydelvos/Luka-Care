@@ -194,7 +194,10 @@ export function Disclaimer({ className }) {
   return (
     <p className={cx("text-[13px] leading-relaxed text-muted", className)}>
       LukaCare memberi panduan perawatan dasar untuk luka ringan, bukan diagnosis atau pengganti pemeriksaan tenaga kesehatan.
-      Jika ragu, periksakan ke puskesmas, klinik, atau IGD terdekat.
+      Jika ragu, periksakan ke puskesmas, klinik, atau IGD terdekat.{" "}
+      <Link to="/sumber" className="font-semibold text-pine">
+        Lihat sumber
+      </Link>
     </p>
   );
 }

@@ -2,7 +2,7 @@ import { useRef, useState } from "react";
 import { LuCamera, LuTrash2, LuRefreshCw } from "react-icons/lu";
 import { Button, ChoiceGroup, Field, MissingHint, Sheet, Toggle, Banner } from "./ui";
 import { compressImage } from "../lib/image";
-import { FLUID_OPTIONS, REDNESS_OPTIONS } from "../data/options";
+import { FEVER_HINT, FLUID_OPTIONS, REDNESS_OPTIONS } from "../content";
 import { checkinWarnings } from "../lib/checkin";
 import { formatShortDate } from "../lib/format";
 import { useToast, useWounds } from "../store/AppProviders";
@@ -173,7 +173,7 @@ export function CheckInSheet({ wound, open, onClose }) {
             <Toggle label="Bengkak atau terasa panas" checked={form.swelling} onChange={(swelling) => set({ swelling })} />
           </div>
           <div className="py-3">
-            <Toggle label="Demam" description="Suhu tubuh 38°C atau lebih" checked={form.fever} onChange={(fever) => set({ fever })} />
+            <Toggle label="Demam" description={FEVER_HINT.text} checked={form.fever} onChange={(fever) => set({ fever })} />
           </div>
           <div className="py-3">
             <Toggle label="Penutup luka sudah diganti" checked={form.dressingChanged} onChange={(dressingChanged) => set({ dressingChanged })} />

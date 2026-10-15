@@ -4,7 +4,7 @@ import { useRouter, Link } from "../lib/router";
 import { Button, PageHeader } from "../components/ui";
 import { ProductCard, ProductSheet } from "../components/shop";
 import { CATEGORIES, PRODUCTS } from "../data/products";
-import { WOUND_GUIDES } from "../data/woundGuides";
+import { WOUND_GUIDES } from "../content";
 import { formatRupiah } from "../lib/format";
 import { useCart } from "../store/AppProviders";
 import { cx } from "../lib/cx";

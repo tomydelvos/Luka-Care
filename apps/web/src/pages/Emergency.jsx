@@ -1,8 +1,9 @@
 import { LuPhone, LuMapPin, LuChevronDown } from "react-icons/lu";
 import { Button, PageHeader, Badge } from "../components/ui";
-import { RED_FLAGS } from "../data/redFlags";
+import { EMERGENCY_LEAD, RED_FLAGS } from "../content";
 import { EMERGENCY_NUMBERS, NEAREST_FACILITY_URL } from "../config/env";
 import { Disclaimer } from "../components/AppShell";
+import { ReviewRibbon } from "../components/ContentMeta";
 
 function FlagList({ flags }) {
   return (
@@ -17,7 +18,10 @@ function FlagList({ flags }) {
             <LuChevronDown size={20} className="mt-0.5 shrink-0 text-muted transition-transform group-open:rotate-180" aria-hidden="true" />
           </summary>
           <div className="mt-3 rounded-2xl bg-sunken p-4">
-            <p className="text-sm font-bold">Yang bisa dilakukan</p>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="text-sm font-bold">Yang bisa dilakukan</p>
+              <ReviewRibbon blocks={f} />
+            </div>
             <ol className="mt-2 list-decimal space-y-1.5 pl-5 text-[15px] text-ink-soft">
               {f.whileWaiting.map((s) => (
                 <li key={s}>{s}</li>
@@ -36,7 +40,7 @@ export default function Emergency() {
 
   return (
     <div>
-      <PageHeader title="Darurat" lead="Jika nyawa terancam atau perdarahan tidak berhenti, jangan menunggu. Telepon sekarang." />
+      <PageHeader title="Darurat" lead={EMERGENCY_LEAD.text} />
 
       <div className="grid gap-3 sm:grid-cols-2">
         {EMERGENCY_NUMBERS.map((n, i) => (

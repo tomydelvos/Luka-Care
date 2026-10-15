@@ -1,6 +1,6 @@
 import { HttpError } from "./http";
 
-// Nilai yang sama dengan src/data/options.js dan woundGuides.js di frontend.
+// Nilai yang sama dengan src/content/options.js dan src/content/wounds/ di frontend.
 export const WOUND_TYPES = ["lecet", "sayatan", "bakar", "lepuh"];
 export const WHO = ["dewasa", "anak", "bayi", "lansia"];
 export const AREAS = ["tangan", "lengan", "lutut", "kaki", "badan", "wajah", "kelamin"];
