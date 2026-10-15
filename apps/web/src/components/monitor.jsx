@@ -1,16 +1,19 @@
 import { useRef, useState } from "react";
 import { LuCamera, LuTrash2, LuRefreshCw } from "react-icons/lu";
-import { Button, ChoiceGroup, Field, MissingHint, Sheet, Toggle, Banner } from "./ui";
+import { Button, ChoiceGroup, Field, MissingHint, MultiChoice, Sheet, Toggle, Banner } from "./ui";
 import { compressImage } from "../lib/image";
-import { FEVER_HINT, FLUID_OPTIONS, REDNESS_OPTIONS } from "../content";
-import { checkinWarnings } from "../lib/checkin";
+import { BED_COLOR_OPTIONS, BURN_RECHECK, FEVER_HINT, FLUID_OPTIONS_V2, LEVELS, SKIN_OPTIONS, SPREAD_OPTIONS } from "../content";
+import { assessCheckin } from "../lib/checkin";
+import { healingPlan } from "../lib/healing";
+import { LevelBanner } from "./LevelBanner";
+import { RichText } from "./RichText";
 import { formatShortDate } from "../lib/format";
 import { useToast, useWounds } from "../store/AppProviders";
 import { USE_MOCK_API } from "../config/env";
 import { cx } from "../lib/cx";
 
 /* ---------- Foto ---------- */
-export function PhotoPicker({ value, onChange }) {
+export function PhotoPicker({ value, onChange, hint = "Opsional. Ambil dari jarak dan cahaya yang sama setiap hari agar mudah dibandingkan." }) {
   const input = useRef(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -33,9 +36,7 @@ export function PhotoPicker({ value, onChange }) {
   return (
     <div>
       <p className="text-[15px] font-bold">Foto luka</p>
-      <p className="mt-0.5 text-sm text-muted">
-        Opsional. Ambil dari jarak dan cahaya yang sama setiap hari agar mudah dibandingkan.
-      </p>
+      <p className="mt-0.5 text-sm text-muted">{hint}</p>
       <input ref={input} type="file" accept="image/*" className="sr-only" onChange={pick} tabIndex={-1} aria-hidden="true" />
       {value ? (
         <div className="mt-3 flex items-center gap-4">
@@ -103,17 +104,22 @@ export function PainScale({ value, onChange }) {
   );
 }
 
-/* ---------- Catat kondisi harian ---------- */
+/* ---------- Catat kondisi harian (versi 2, PRD tahap 2 F4) ---------- */
 const EMPTY = {
   photo: null,
   pain: null,
-  redness: "",
+  bedColors: [],
   fluid: "",
-  swelling: false,
+  newOdor: false,
+  skin: [],
+  spread: "",
   fever: false,
+  burnWorse: false,
   dressingChanged: true,
   note: "",
 };
+
+const items = (b) => b.items;
 
 export function CheckInSheet({ wound, open, onClose }) {
   const [form, setForm] = useState(EMPTY);
@@ -123,9 +129,12 @@ export function CheckInSheet({ wound, open, onClose }) {
   const toast = useToast();
   const set = (patch) => setForm((f) => ({ ...f, ...patch }));
 
-  const ready = form.pain !== null && form.redness && form.fluid;
+  const plan = healingPlan(wound);
+  const askBurn = wound.type === "bakar" && plan.recheckDue;
+  const ready = form.pain !== null && form.bedColors.length > 0 && form.fluid && form.spread;
   const previous = wound.checkins[wound.checkins.length - 1];
-  const preview = ready ? checkinWarnings(form, previous) : [];
+  const draft = { ...form, schema: 2, burnWorse: askBurn && form.burnWorse };
+  const preview = ready ? assessCheckin(wound, draft, previous) : { level: "pantau", reasons: [] };
 
   const close = () => {
     setForm(EMPTY);
@@ -137,8 +146,12 @@ export function CheckInSheet({ wound, open, onClose }) {
     setSaving(true);
     setError("");
     try {
-      await addCheckin(wound.id, form);
-      toast(preview.length ? "Catatan disimpan. Ada tanda yang perlu diperiksakan." : "Catatan hari ini disimpan", preview.length ? "alert" : "default");
+      await addCheckin(wound.id, { ...draft, assessment: { level: preview.level, reasons: preview.reasons.map((r) => r.id) } });
+      const urgent = preview.level === "igd" || preview.level === "hari_ini";
+      toast(
+        preview.level === "pantau" ? "Catatan hari ini disimpan" : `Catatan disimpan. ${LEVELS[preview.level].title}.`,
+        urgent ? "alert" : "default"
+      );
       close();
     } catch (err) {
       setError(err.message);
@@ -155,7 +168,12 @@ export function CheckInSheet({ wound, open, onClose }) {
       footer={
         <>
           <MissingHint
-            items={[form.pain === null && "tingkat nyeri", !form.redness && "kemerahan", !form.fluid && "cairan dari luka"]}
+            items={[
+              !form.bedColors.length && "warna dasar luka",
+              !form.fluid && "cairan",
+              !form.spread && "garis pulpen",
+              form.pain === null && "tingkat nyeri",
+            ]}
           />
           <Button block size="lg" onClick={save} disabled={!ready || saving}>
             {saving ? "Menyimpan…" : "Simpan catatan"}
@@ -163,32 +181,61 @@ export function CheckInSheet({ wound, open, onClose }) {
         </>
       }
     >
-      <div className="space-y-6 pt-1">
-        <PhotoPicker value={form.photo} onChange={(photo) => set({ photo })} />
+      <div className="space-y-7 pt-1">
+        <PhotoPicker
+          value={form.photo}
+          onChange={(photo) => set({ photo })}
+          hint="Opsional. Pakai cahaya alami dan jarak yang sama setiap hari, dan pastikan garis pulpen ikut terfoto."
+        />
+        <MultiChoice
+          label="Warna dasar luka"
+          hint="Boleh pilih lebih dari satu."
+          options={items(BED_COLOR_OPTIONS)}
+          value={form.bedColors}
+          onChange={(bedColors) => set({ bedColors })}
+        >
+          <p className="text-sm text-muted">
+            <RichText text={BED_COLOR_OPTIONS.rule} />
+          </p>
+        </MultiChoice>
+        <div className="space-y-2">
+          <ChoiceGroup label="Cairan dari luka" options={items(FLUID_OPTIONS_V2)} value={form.fluid} onChange={(fluid) => set({ fluid })} />
+          <p className="text-sm text-muted">{FLUID_OPTIONS_V2.note}</p>
+        </div>
+        <MultiChoice
+          label="Kulit di sekitar luka, dibanding sisi tubuh lainnya"
+          hint={SKIN_OPTIONS.hint}
+          options={items(SKIN_OPTIONS)}
+          value={form.skin}
+          onChange={(skin) => set({ skin })}
+        />
+        <div className="space-y-2">
+          <ChoiceGroup label="Garis pulpen di tepi luka" options={items(SPREAD_OPTIONS)} value={form.spread} onChange={(spread) => set({ spread })} />
+          {form.spread === "belum_ditandai" && (
+            <Banner tone="info" title="Cara menandai">
+              {SPREAD_OPTIONS.howTo}
+            </Banner>
+          )}
+        </div>
         <PainScale value={form.pain} onChange={(pain) => set({ pain })} />
-        <ChoiceGroup label="Kemerahan di sekitar luka" options={REDNESS_OPTIONS} value={form.redness} onChange={(redness) => set({ redness })} />
-        <ChoiceGroup label="Cairan dari luka" options={FLUID_OPTIONS} value={form.fluid} onChange={(fluid) => set({ fluid })} />
         <div className="divide-y divide-line rounded-2xl border border-line px-4">
           <div className="py-3">
-            <Toggle label="Bengkak atau terasa panas" checked={form.swelling} onChange={(swelling) => set({ swelling })} />
+            <Toggle label="Ada bau baru dari luka" checked={form.newOdor} onChange={(newOdor) => set({ newOdor })} />
           </div>
           <div className="py-3">
-            <Toggle label="Demam" description={FEVER_HINT.text} checked={form.fever} onChange={(fever) => set({ fever })} />
+            <Toggle label="Demam atau badan sangat lemas" description={FEVER_HINT.text} checked={form.fever} onChange={(fever) => set({ fever })} />
           </div>
+          {askBurn && (
+            <div className="py-3">
+              <Toggle label={BURN_RECHECK.question} description={BURN_RECHECK.note} checked={form.burnWorse} onChange={(burnWorse) => set({ burnWorse })} />
+            </div>
+          )}
           <div className="py-3">
             <Toggle label="Penutup luka sudah diganti" checked={form.dressingChanged} onChange={(dressingChanged) => set({ dressingChanged })} />
           </div>
         </div>
         <Field as="textarea" label="Catatan" placeholder="Misalnya: keropeng mulai terbentuk, gatal di tepi luka" value={form.note} onChange={(e) => set({ note: e.target.value })} />
-        {preview.length > 0 && (
-          <Banner tone="alert" title="Tanda ini sebaiknya diperiksakan hari ini">
-            <ul className="list-disc space-y-0.5 pl-5">
-              {preview.map((w) => (
-                <li key={w}>{w}</li>
-              ))}
-            </ul>
-          </Banner>
-        )}
+        <LevelBanner assessment={preview} />
         {error && <Banner tone="alert">{error}</Banner>}
       </div>
     </Sheet>

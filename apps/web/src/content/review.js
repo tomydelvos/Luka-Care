@@ -5,7 +5,8 @@ import { SOURCE_BY_ID } from "./sources";
 import { COMMON_STEPS, MONITOR_SIGNS, WOUND_GUIDES } from "./wounds";
 import { EMERGENCY_LEAD, LEVEL_COPY, RED_FLAGS } from "./redFlags";
 import { CAUTIONS, ESCALATIONS } from "./assessment";
-import { CHECKIN_WARNINGS, FEVER_HINT } from "./checkin";
+import * as CHECKIN from "./checkin";
+import * as HEALING from "./healing";
 import { CASE_STORIES } from "./caseStories";
 import { CHAPTERS, LIBRARY_INTRO, WOUND_COLORS } from "./library";
 
@@ -18,8 +19,8 @@ const CONTENT = {
   emergencyLead: EMERGENCY_LEAD,
   escalations: ESCALATIONS,
   cautions: CAUTIONS,
-  checkinWarnings: CHECKIN_WARNINGS,
-  feverHint: FEVER_HINT,
+  checkin: { ...CHECKIN },
+  healing: { ...HEALING },
   caseStories: CASE_STORIES,
   libraryIntro: LIBRARY_INTRO,
   chapters: CHAPTERS.map((c) => ({ [c.slug]: c.nodes })),

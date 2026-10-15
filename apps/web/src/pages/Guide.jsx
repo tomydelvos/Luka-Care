@@ -13,7 +13,8 @@ import { Disclaimer } from "../components/AppShell";
 import { ReviewRibbon, SourcesButton } from "../components/ContentMeta";
 import { CaseStories } from "../components/CaseStories";
 import { ContactProfile } from "../components/ContactProfile";
-import { CHAPTER_FOR_GUIDE, RED_FLAGS, RED_FLAG_BY_ID, chapterFigure } from "../content";
+import { CHAPTER_FOR_GUIDE, RED_FLAGS, RED_FLAG_BY_ID, RISK_GROUP, chapterFigure } from "../content";
+import { CONTENT_VERSION, healingSnapshot } from "../lib/healing";
 import { WOUND_GUIDES, WOUND_TYPE_LIST, assessDetails } from "../content";
 import { AREA_OPTIONS, CONDITION_OPTIONS, SIZE_OPTIONS, WHO_OPTIONS, labelOf } from "../content";
 import { CATEGORY_BY_ID, productsFor } from "../data/products";
@@ -268,7 +269,7 @@ export default function Guide() {
   const [done, setDone] = useState({});
   const [escalation, setEscalation] = useState(null);
   const [openProduct, setOpenProduct] = useState(null);
-  const [save, setSave] = useState({ title: "", photo: null, pain: null });
+  const [save, setSave] = useState({ title: "", photo: null, pain: null, risk: { perokok: false, imunLemah: false } });
   const [saving, setSaving] = useState(false);
   // Pengguna yang belum masuk diminta daftar (atau masuk) sebelum luka disimpan.
   // Isian langkah ini tetap ada di state selama Sheet terbuka.
@@ -315,19 +316,22 @@ export default function Guide() {
   const saveWound = async () => {
     setSaving(true);
     try {
-      const wound = await create(
-        { title: save.title.trim() || guide.defaultTitle(AREA_NOUN[details.area]), type, ...details },
-        {
-          photo: save.photo,
-          pain: save.pain,
-          redness: "tidak",
-          fluid: details.condition === "basah" ? "bening" : "tidak",
-          swelling: false,
-          fever: false,
-          dressingChanged: true,
-          note: "Catatan awal dari panduan.",
-        }
-      );
+      const input = { title: save.title.trim() || guide.defaultTitle(AREA_NOUN[details.area]), type, ...details, risk: save.risk };
+      const first = {
+        schema: 2,
+        photo: save.photo,
+        pain: save.pain,
+        bedColors: [],
+        fluid: details.condition === "basah" ? "bening_tipis" : "tidak",
+        newOdor: false,
+        skin: [],
+        spread: "belum_ditandai",
+        fever: false,
+        dressingChanged: true,
+        note: "Catatan awal dari panduan.",
+        assessment: { level: "pantau", reasons: [] },
+      };
+      const wound = await create({ ...input, healing: healingSnapshot(input), contentVersion: CONTENT_VERSION }, first);
       toast("Luka disimpan. Catat kondisinya setiap hari.");
       navigate(`/pantau/${wound.id}`, { replace: true });
     } catch (err) {
@@ -531,6 +535,26 @@ export default function Guide() {
           <Field label="Nama luka" value={save.title} onChange={(e) => setSave((s) => ({ ...s, title: e.target.value }))} maxLength={60} />
           <PhotoPicker value={save.photo} onChange={(photo) => setSave((s) => ({ ...s, photo }))} />
           <PainScale value={save.pain} onChange={(pain) => setSave((s) => ({ ...s, pain }))} />
+          <fieldset className="rounded-2xl border border-line bg-surface px-4 py-2">
+            <legend className="sr-only">Faktor yang memperlambat pulih</legend>
+            <p className="pt-2 text-sm text-muted">{RISK_GROUP.text}</p>
+            <div className="divide-y divide-line">
+              <div className="py-3">
+                <Toggle
+                  label="Orang yang terluka merokok"
+                  checked={save.risk.perokok}
+                  onChange={(perokok) => setSave((s) => ({ ...s, risk: { ...s.risk, perokok } }))}
+                />
+              </div>
+              <div className="py-3">
+                <Toggle
+                  label="Daya tahan tubuh rendah atau gizi kurang"
+                  checked={save.risk.imunLemah}
+                  onChange={(imunLemah) => setSave((s) => ({ ...s, risk: { ...s.risk, imunLemah } }))}
+                />
+              </div>
+            </div>
+          </fieldset>
           {!user && (
             <Banner tone="info" title="Buat akun untuk menyimpan">
               Pemantauan luka butuh akun agar foto dan catatan tersimpan aman dan bisa dibuka di perangkat lain. Isian Anda di halaman ini

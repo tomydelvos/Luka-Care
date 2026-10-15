@@ -316,13 +316,27 @@ Kontrak API (`POST /wounds` dan `POST /wounds/:id/examinations`, lihat `apps/api
 - Pembentukan respons di `src/lib/wounds.js`, termasuk ekspor `GET /me/export`.
 - `assessment` dan `healing` dihitung di klien saat simpan dan disimpan apa adanya. Server tidak menilai ulang, jadi aturan Lampiran B cukup ada di satu tempat (`src/lib/checkin.js`).
 
+### Catatan implementasi M3
+
+Keputusan yang dibuat saat implementasi dan perlu ditinjau klinisi (semuanya berstatus `draft`, sebagian berlabel `I`):
+
+- **Isian tambahan di luar tabel F4**, agar setiap baris Lampiran B punya pemicu: pilihan kulit sekitar `garis_menjalar`, `menghitam`, `melepuh`, `mati_rasa`; warna dasar `merah_rapuh` (merah pucat atau gelap yang mudah berdarah, atau jaringan menonjol); dan pertanyaan `burnWorse` yang hanya muncul untuk luka bakar pada hari ke-2–3.
+- **Demam tanpa tanda lain** dinilai `hari_ini` (label I). Lampiran B hanya mengatur demam bersama tanda infeksi (`igd`); laporan riset menyebut luka dengan demam sebagai alasan ke IGD. Perlu keputusan klinisi.
+- **Ambang demam** di formulir menjadi 37,7 °C (tahap 1: 38 °C), mengikuti laporan riset.
+- **"Lapisan kuning terus muncul kembali"** dibaca sebagai kuning tercatat di dua catatan berturut-turut; **"bagian hitam baru"** sebagai hitam yang tidak ada di catatan sebelumnya (label I).
+- **"Lewat batas periksa tanpa tanda membaik"**: luka dianggap membaik bila catatan terakhir hanya berisi merah muda atau keropeng dan tidak ada pemicu lain (label I).
+- **Luka bakar tanpa derajat** (panduan tahap 1 belum menanyakannya) memakai batas periksa yang lebih awal, 10 hari, dan menampilkan perkiraan derajat 1 dan 2 superfisial (label I). Setelah M4 menanyakan derajat, baris yang tepat dipakai.
+- **Lecet** dipetakan dari luas: kecil → lecet ringan (7 hari), sedang atau besar → lecet lebar (14 hari).
+- **Migrasi catatan tahap 1**: selain pemetaan di F4, `swelling: true` dibaca sebagai kulit `lebih_hangat` dan `tegang_mengilap`, sehingga aturan tahap 1 "bengkak disertai nyeri bertambah" tetap berlaku.
+- **Kelompok berisiko** diambil dari diabetes dan lansia di panduan, ditambah dua tombol baru di langkah 6: perokok dan daya tahan tubuh rendah atau gizi kurang. Tampil sebagai "Periksakan lebih awal" tanpa angka.
+
 ## Rencana rilis
 
 | Tahap | Isi | Ukuran |
 | --- | --- | --- |
 | M1. Fondasi konten (selesai) | F1, F8, potongan ilustrasi F9, test sumber. `healing.js` dan `colors.js` dibuat di M3 bersama angkanya; tautan "Sumber" di halaman pustaka dibuat di M2 | Sedang |
 | M2. Pustaka (selesai) | F2, ilustrasi di panduan (F3 bagian kartu dan langkah). "Pustaka" sementara jadi item ke-5 di navigasi utama sampai diputuskan lewat uji kegunaan; layar rujukan baru menautkan ke bab terkait, ilustrasi dan langkah bab di layar rujukan masuk M4 | Sedang |
-| M3. Pemantauan | F4, F5, F6, migrasi data di `localStorage` dan D1, perubahan `apps/api` (Lampiran C) | Besar |
+| M3. Pemantauan (selesai) | F4, F5, F6, migrasi data di `localStorage` dan D1, perubahan `apps/api` (Lampiran C). Keputusan yang perlu ditinjau klinisi ada di "Catatan implementasi M3" | Besar |
 | M4. Luka bakar dan rujukan | Penilaian luka bakar dan pertanyaan kedalaman (F3), `EscalationView` bergambar | Sedang |
 | M5. Tinjauan dan rilis | F10, uji kegunaan 5–8 peserta berkulit sawo matang, perbaikan, rilis staging lalu production. Rilis production dengan akun butuh API yang sudah di-deploy dan penyedia email | Sedang |
 | Berikutnya | F7, varian warna kulit (F9), F11 | — |

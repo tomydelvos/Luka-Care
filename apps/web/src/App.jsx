@@ -1,3 +1,4 @@
+import { Suspense, lazy } from "react";
 import { RouterProvider, Routes, useRouter } from "./lib/router";
 import { ROUTER_MODE } from "./config/env";
 import { AppProviders } from "./store/AppProviders";
@@ -6,17 +7,20 @@ import Home from "./pages/Home";
 import Guide from "./pages/Guide";
 import Monitor from "./pages/Monitor";
 import WoundDetail from "./pages/WoundDetail";
-import Shop from "./pages/Shop";
-import Cart from "./pages/Cart";
-import Checkout from "./pages/Checkout";
 import Emergency from "./pages/Emergency";
 import { Login, Register } from "./pages/Auth";
-import Account from "./pages/Account";
-import Sources from "./pages/Sources";
-import Library from "./pages/Library";
-import LibraryChapter from "./pages/LibraryChapter";
-import WoundColors from "./pages/WoundColors";
 import NotFound from "./pages/NotFound";
+
+// Halaman yang tidak dibutuhkan saat menangani luka dimuat terpisah agar beranda, panduan,
+// darurat, dan pantau terbuka lebih cepat di ponsel.
+const Shop = lazy(() => import("./pages/Shop"));
+const Cart = lazy(() => import("./pages/Cart"));
+const Checkout = lazy(() => import("./pages/Checkout"));
+const Account = lazy(() => import("./pages/Account"));
+const Sources = lazy(() => import("./pages/Sources"));
+const Library = lazy(() => import("./pages/Library"));
+const LibraryChapter = lazy(() => import("./pages/LibraryChapter"));
+const WoundColors = lazy(() => import("./pages/WoundColors"));
 
 const ROUTES = [
   { path: "/", render: () => <Home /> },
@@ -44,7 +48,9 @@ function Screen() {
   const { pathname } = useRouter();
   return (
     <AppShell focus={FOCUS_ROUTES.includes(pathname)}>
-      <Routes routes={ROUTES} fallback={<NotFound />} />
+      <Suspense fallback={<p className="py-10 text-center text-muted">Memuat…</p>}>
+        <Routes routes={ROUTES} fallback={<NotFound />} />
+      </Suspense>
     </AppShell>
   );
 }

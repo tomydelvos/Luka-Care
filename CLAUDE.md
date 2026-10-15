@@ -9,7 +9,7 @@ cd apps/web
 npm install
 npm run dev              # http://localhost:3001, butuh API lokal di :8787 (lihat di bawah)
 npm run lint             # ESLint
-npm test                 # Vitest (konten, assessDetails, checkinWarnings)
+npm test                 # Vitest (konten, assessDetails, assessCheckin, healingPlan)
 npm run build:staging    # pakai .env.staging; output ke apps/web/dist
 npm run build:production # gagal selama konten medis masih draft (gerbang di vite.config.js)
 npm run deploy:staging   # wrangler → staging.lukacare.com
@@ -42,14 +42,15 @@ Web dan API sama-sama punya test Vitest; web juga punya ESLint. `npm run build` 
 - Galeri foto di `/pantau/:id` (`src/components/PhotoGallery.jsx`) dibatasi `MAX_GALLERY_PHOTOS` = 3 per luka, terpisah dari foto catatan harian.
 - Katalog produk di `src/data/products.js` masih contoh dengan nama generik.
 - Backend `apps/api` (Hono di Cloudflare Worker + D1 + R2) sudah ada dan teruji, tapi belum di-deploy. Kontraknya sama dengan `src/services/woundService.js` dan `authService.js`; ubah keduanya bersamaan. Batas galeri (`MAX_GALLERY_PHOTOS`) didefinisikan di frontend dan di `apps/api/src/routes/wounds.js`.
-- **Tahap 2 berjalan:** `docs/prd-tahap-2.md` (v1.2). Isinya memasukkan buku panduan dan hasil riset ke web. M1 (fondasi konten) dan M2 (pustaka luka) selesai; berikutnya M3 (catatan harian v2, aturan penilaian v2, batas periksa). Kerjakan berurutan sampai M5; perubahan model data dikerjakan di frontend dan `apps/api` bersamaan.
+- **Tahap 2 berjalan:** `docs/prd-tahap-2.md` (v1.2). Isinya memasukkan buku panduan dan hasil riset ke web. M1 (fondasi konten), M2 (pustaka luka), dan M3 (catatan harian v2, penilaian 4 level, batas periksa) selesai; berikutnya M4 (pertanyaan kedalaman dan luka bakar di panduan, layar rujukan bergambar). Kerjakan berurutan sampai M5; perubahan model data dikerjakan di frontend dan `apps/api` bersamaan.
 
 ## Konten dan riset
 
 - `docs/buku-panduan/buku-panduan-perawatan-luka-luar.md`: buku panduan 10 jenis luka (Bagian A rawat di rumah, Bagian B perlu tenaga kesehatan, Bagian C warna luka dan waktu pulih), tabel tanda bahaya, kotak P3K, dan sumber. Ini salinan dari doc Claude tempat klinisi memberi komentar.
 - `docs/riset/waktu-penyembuhan-luka-berdasarkan-warna.md`: laporan riset lengkap; `docs/riset/catatan/` berisi catatan mentah per topik. Bagian "Sumber berselisih" dan "Celah bukti" wajib dibaca sebelum menulis angka apa pun.
 - `apps/web/public/illustrations/`: 16 ilustrasi PNG (2x); `kecil/` (WebP tampak atas untuk kartu), `potongan/` (panel tampak atas dan penampang tiap luka untuk ponsel), `warna/` (swatch warna dasar luka dan tanda bahaya untuk catatan harian v2). Kodenya di `tools/illustrations/` (lihat README di sana; `npm run thumbs` dan `npm run crops` untuk WebP). Ubah gambar lewat kode, jangan edit PNG langsung.
-- `src/content/`: semua konten medis (PRD F1). Satu file per jenis luka di `wounds/`, plus `redFlags.js`, `assessment.js` (aturan `assessDetails`), `checkin.js`, `caseStories.js` (10 contoh kasus dari buku), `library.js` (isi Bab 1–10 dan Bagian C untuk `/pustaka`, disalin kata per kata dari buku; per bab berupa `nodes` berurutan yang dirender `components/LibraryNodes.jsx`), `chapterMeta.js` (sumber per bab), `options.js`, dan `sources.js` (33 rujukan buku). Setiap blok dibungkus `block(fields, { sources, evidence })` dari `meta.js` dan berstatus `draft` sampai ditinjau. Komponen mengimpor dari `src/content` (index), tidak ada teks medis di komponen. Jika buku berubah, ubah juga file di sini.
+- `src/content/`: semua konten medis (PRD F1). Satu file per jenis luka di `wounds/`, plus `redFlags.js`, `assessment.js` (aturan `assessDetails`), `caseStories.js` (10 contoh kasus dari buku), `library.js` (isi Bab 1–10 dan Bagian C untuk `/pustaka`, disalin kata per kata dari buku; per bab berupa `nodes` berurutan yang dirender `components/LibraryNodes.jsx`), `chapterMeta.js` (sumber per bab), `checkin.js` (pilihan catatan harian v2, alasan Lampiran B, arti level), `healing.js` (Lampiran A, batas 4 minggu, kelompok berisiko, fase penyembuhan), `options.js`, dan `sources.js` (rujukan buku dan riset). Setiap blok dibungkus `block(fields, { sources, evidence })` dari `meta.js` dan berstatus `draft` sampai ditinjau. Komponen mengimpor dari `src/content` (index), tidak ada teks medis di komponen. Jika buku berubah, ubah juga file di sini.
+- Aturan pemantauan: `src/lib/checkin.js` (`normalizeCheckin` membaca catatan tahap 1 sebagai versi 2, `assessCheckin`, `assessWound` dengan aturan waktu) dan `src/lib/healing.js` (`healingPlan`, `healingSnapshot`). Fungsi murni dengan test untuk setiap baris Lampiran B. Luka baru menyimpan `risk`, `healing`, dan `contentVersion`; catatan baru membawa `schema: 2` dan `assessment`.
 - Status tinjauan: isi `review: { status: "reviewed", reviewedBy, reviewedAt }` per blok setelah klinisi menyetujui; label `I` juga butuh `inferenceApproved: true`. `src/content/review.js` mengumpulkan semua blok untuk test dan gerbang build. Di staging (atau `VITE_SHOW_REVIEW=true`) blok draft diberi pita "Belum ditinjau klinisi" (`components/ContentMeta.jsx`), dan tombol "Sumber" membuka rujukan per bagian; daftar lengkap di `/sumber`.
 - `src/data/`: hanya data non-medis (`products.js`, `contact.js`).
 - `src/data/contact.js`: profile kontak di footer langkah 4 (`ContactProfile`). Nilainya masih contoh; isi data asli sebelum rilis dan jangan tampilkan nomor yang belum aktif.
@@ -83,7 +84,8 @@ Web dan API sama-sama punya test Vitest; web juga punya ESLint. `npm run build` 
 - [ ] Review konten medis oleh tenaga kesehatan (daftar tinjauan ada di PRD tahap 2, F10)
 - [x] Tahap 2 M1: konten di `src/content/` dengan sumber dan status tinjauan, halaman `/sumber`, gerbang build production, potongan ilustrasi
 - [x] Tahap 2 M2: pustaka `/pustaka` (10 bab + Bagian C), "Pustaka" di navigasi utama, kartu jenis luka bergambar dan penampang kulit di langkah perawatan, tautan bab dari beranda, panduan, layar rujukan, dan detail luka
-- [x] ESLint dan test Vitest untuk konten, `assessDetails`, dan `checkinWarnings`
+- [x] Tahap 2 M3: catatan harian v2, `assessCheckin` 4 level, perkiraan pulih dan batas periksa, migrasi D1 `0003`, catatan tahap 1 tetap terbaca
+- [x] ESLint dan test Vitest untuk konten, `assessDetails`, dan aturan catatan harian
 - [ ] Test alur panduan dengan Testing Library
 - [x] `apps/api`: Worker + D1 (`users`, `wounds`, `wound_examinations`, `wound_photos`) + R2
 - [x] Sambungkan frontend ke API (development) dan alur simpan luka tanpa login (minta daftar di langkah 6)

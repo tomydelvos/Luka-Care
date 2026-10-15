@@ -8,16 +8,23 @@ import { apiFetch } from "./http";
 // Wound {
 //   id, title, type: "lecet"|"sayatan"|"bakar"|"lepuh",
 //   area, condition, size, who, diabetes,
+//   risk: { perokok, imunLemah },                     (tahap 2)
+//   healing: { rowId, checkByDays, evidence },        (tahap 2, lib/healing.js healingSnapshot)
+//   contentVersion, depthLayer, burn,                 (tahap 2; depthLayer dan burn diisi di M4)
 //   status: "dipantau"|"sembuh", createdAt, healedAt,
 //   checkins: Checkin[],
 //   photos: Photo[]          (galeri, maks. MAX_GALLERY_PHOTOS)
 // }
 // Photo { id, at, src (dataURL di mock / URL R2 di API) }
-// Checkin {
-//   id, at, photo (dataURL di mock / URL R2 di API),
-//   pain 0–10, redness: "tidak"|"sedikit"|"meluas",
-//   fluid: "tidak"|"bening"|"nanah", swelling, fever, dressingChanged, note
+// Checkin versi 2 (tahap 2, content/checkin.js) {
+//   id, at, schema: 2, photo (dataURL di mock / URL R2 di API), pain 0–10,
+//   bedColors: ["merah_muda"|"merah"|"keropeng"|"kuning"|"hitam"|"merah_rapuh"],
+//   fluid: "tidak"|"bening_tipis"|"kuning_tipis"|"kental_keruh"|"kehijauan",
+//   newOdor, skin: [...SKIN_OPTIONS], spread: "belum_ditandai"|"di_dalam_garis"|"melewati_garis",
+//   fever, burnWorse, dressingChanged, note, assessment: { level, reasons: [id] }
 // }
+// Checkin tahap 1 (tanpa schema) { redness, fluid: "tidak"|"bening"|"nanah", swelling, ... }
+//   tetap terbaca lewat normalizeCheckin di lib/checkin.js.
 //
 // Endpoint API yang diharapkan (Cloudflare Worker + D1 + R2):
 //   GET    /wounds

@@ -5,19 +5,29 @@ import { acceptPhotoRef, deletePhotos } from "../lib/photos";
 import { getOwnedWound, loadWound, loadWounds, photoKeysOf } from "../lib/wounds";
 import {
   AREAS,
+  BED_COLORS,
   CONDITIONS,
   FLUID,
+  FLUID_V2,
   REDNESS,
   SIZES,
+  SKIN,
+  SPREAD,
   STATUSES,
   WHO,
   WOUND_TYPES,
+  assessment,
   flag,
+  healing,
   int,
   isoDate,
+  listOf,
   oneOf,
+  risk,
   text,
 } from "../lib/validate";
+
+const json = (value) => (value === null || value === undefined ? null : JSON.stringify(value));
 
 // Sama dengan MAX_GALLERY_PHOTOS di frontend.
 export const MAX_GALLERY_PHOTOS = 3;
@@ -33,8 +43,8 @@ wounds.post("/", async (c) => {
   const body = await readBody(c);
   const id = newId("w");
   await c.env.DB.prepare(
-    `INSERT INTO wounds (id, user_id, title, type, area, condition, size, who, diabetes, status, created_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'dipantau', ?)`
+    `INSERT INTO wounds (id, user_id, title, type, area, condition, size, who, diabetes, status, created_at, risk, healing, content_version)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'dipantau', ?, ?, ?, ?)`
   )
     .bind(
       id,
@@ -46,7 +56,10 @@ wounds.post("/", async (c) => {
       oneOf(body.size, SIZES, "Luas luka", { optional: true }),
       oneOf(body.who ?? "dewasa", WHO, "Siapa yang terluka"),
       flag(body.diabetes),
-      nowIso()
+      nowIso(),
+      json(risk(body.risk)),
+      json(healing(body.healing)),
+      text(body.contentVersion, "Versi konten", { max: 20, optional: true }) || null
     )
     .run();
   return ok(c, await loadWound(c.env, origin(c), c.var.user.id, id), 201);
@@ -65,6 +78,7 @@ wounds.patch("/:id", async (c) => {
     size: (v) => oneOf(v, SIZES, "Luas luka"),
     who: (v) => oneOf(v, WHO, "Siapa yang terluka"),
     diabetes: flag,
+    risk: (v) => json(risk(v)),
   };
   const column = { healedAt: "healed_at" };
   const sets = [];
@@ -90,35 +104,52 @@ wounds.delete("/:id", async (c) => {
 });
 
 // Catatan harian → tabel wound_examinations.
+// schema 2 (tahap 2): warna dasar luka, kulit sekitar, garis pulpen, bau baru. Tanpa schema: format tahap 1.
+function examinationRow(body) {
+  const common = {
+    pain: int(body.pain, "Tingkat nyeri", 0, 10),
+    note: text(body.note, "Catatan", { min: 0, max: 500, optional: true }),
+    fever: flag(body.fever),
+    dressing_changed: flag(body.dressingChanged),
+  };
+  if (body.schema !== 2) {
+    return {
+      ...common,
+      schema: 1,
+      redness: oneOf(body.redness, REDNESS, "Kemerahan"),
+      fluid: oneOf(body.fluid, FLUID, "Cairan dari luka"),
+      swelling: flag(body.swelling),
+    };
+  }
+  const spread = oneOf(body.spread, SPREAD, "Garis pulpen");
+  return {
+    ...common,
+    schema: 2,
+    // Kolom tahap 1 tetap diisi agar klien lama masih bisa membaca catatan ini.
+    redness: spread === "melewati_garis" ? "meluas" : "tidak",
+    fluid: oneOf(body.fluid, FLUID_V2, "Cairan dari luka"),
+    swelling: 0,
+    bed_colors: json(listOf(body.bedColors, BED_COLORS, "Warna dasar luka")),
+    new_odor: flag(body.newOdor),
+    skin: json(listOf(body.skin, SKIN, "Kulit di sekitar luka")),
+    spread,
+    burn_worse: flag(body.burnWorse),
+    assessment: json(assessment(body.assessment)),
+  };
+}
+
 wounds.post("/:id/examinations", async (c) => {
   const id = c.req.param("id");
   const userId = c.var.user.id;
   await getOwnedWound(c.env, userId, id);
   const body = await readBody(c);
-  const row = {
-    pain: int(body.pain, "Tingkat nyeri", 0, 10),
-    redness: oneOf(body.redness, REDNESS, "Kemerahan"),
-    fluid: oneOf(body.fluid, FLUID, "Cairan dari luka"),
-    note: text(body.note, "Catatan", { min: 0, max: 500, optional: true }),
-  };
-  const photoKey = await acceptPhotoRef(c.env, body.photo, userId, id);
+  const row = examinationRow(body);
+  row.photo_key = await acceptPhotoRef(c.env, body.photo, userId, id);
+  const columns = ["id", "wound_id", "at", ...Object.keys(row)];
   await c.env.DB.prepare(
-    `INSERT INTO wound_examinations (id, wound_id, at, photo_key, pain, redness, fluid, swelling, fever, dressing_changed, note)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    `INSERT INTO wound_examinations (${columns.join(", ")}) VALUES (${columns.map(() => "?").join(", ")})`
   )
-    .bind(
-      newId("c"),
-      id,
-      nowIso(),
-      photoKey,
-      row.pain,
-      row.redness,
-      row.fluid,
-      flag(body.swelling),
-      flag(body.fever),
-      flag(body.dressingChanged),
-      row.note
-    )
+    .bind(newId("c"), id, nowIso(), ...Object.values(row))
     .run();
   return ok(c, await loadWound(c.env, origin(c), userId, id), 201);
 });

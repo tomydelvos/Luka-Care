@@ -77,7 +77,7 @@ Data lokal (akun, luka, foto) tersimpan di `apps/api/.wrangler/`.
 | --- | --- |
 | `/` | Beranda: mulai panduan, luka yang dipantau, P3K dasar, tanda kapan ke dokter |
 | `/panduan` | Alur 6 langkah: tanda bahaya → jenis luka → detail (dengan 10 contoh kasus kronologis) → perawatan (dengan timer, footer profile kontak) → perlengkapan → simpan untuk dipantau. Bisa langsung ke jenis tertentu dengan `?jenis=lecet\|sayatan\|bakar\|lepuh` |
-| `/pantau`, `/pantau/:id` | Daftar luka, catatan harian (foto, skala nyeri 0–10, kemerahan, cairan, demam), grafik nyeri, perbandingan foto awal vs terbaru, galeri foto (maks. 3 per luka) |
+| `/pantau`, `/pantau/:id` | Daftar luka dengan lencana level, catatan harian versi 2 (foto, warna dasar luka bergambar, cairan, kulit sekitar, garis pulpen, bau baru, nyeri 0–10, demam, lihat ulang luka bakar), penilaian 4 level (IGD, hari ini, beberapa hari, pantau), perkiraan pulih dan batas periksa bertanggal, linimasa penyembuhan normal, grafik nyeri, galeri foto (maks. 3 per luka) |
 | `/belanja`, `/keranjang`, `/checkout` | Katalog per kategori, filter `?untuk=<jenis luka>`, keranjang, checkout (mode demo) |
 | `/darurat` | Nomor 119 dan 112, cari faskes terdekat, semua tanda bahaya beserta yang bisa dilakukan |
 | `/masuk`, `/daftar`, `/akun` | Autentikasi, persetujuan data kesehatan, unduh/hapus data |
@@ -89,7 +89,7 @@ Data lokal (akun, luka, foto) tersimpan di `apps/api/.wrangler/`.
 1. **Cek tanda bahaya dulu.** Panduan selalu dimulai dengan daftar kondisi yang tidak boleh dirawat sendiri. Jika ada yang dipilih, panduan dan rekomendasi produk berhenti dan diganti arahan ke 119 atau faskes.
 2. **Panduan dan produk dipisah.** Langkah perawatan tidak menyebut merek. Produk muncul sesudahnya sebagai kategori pendukung.
 3. **Tanpa login untuk pertolongan pertama.** Akun hanya dibutuhkan untuk menyimpan riwayat ke server.
-4. **Bukan diagnosis.** Catatan harian hanya dicocokkan dengan tanda bahaya umum (kemerahan melebar, nanah, demam, nyeri naik tajam) lalu disarankan periksa.
+4. **Bukan diagnosis.** Catatan harian hanya dicocokkan dengan tanda bahaya umum (Lampiran B PRD tahap 2: perluasan melewati garis pulpen, cairan kental atau kehijauan, bau baru, kulit hangat dan keras, demam, dan lainnya) lalu disarankan periksa dengan level yang sesuai.
 
 > Semua konten medis ada di `apps/web/src/content/`. Setiap blok membawa sumber (`sources.js`), label asal data (`A`/`B`/`K`/`F`/`I`), dan status tinjauan. **Wajib ditinjau dokter atau perawat sebelum rilis production:** `npm run build:production` sengaja gagal selama masih ada blok berstatus `draft`. Di staging, blok seperti itu diberi pita "Belum ditinjau klinisi".
 
@@ -119,7 +119,7 @@ GET    /wounds
 POST   /wounds
 PATCH  /wounds/:id
 DELETE /wounds/:id
-POST   /wounds/:id/examinations      catatan harian → tabel wound_examinations
+POST   /wounds/:id/examinations      catatan harian → tabel wound_examinations (schema 2 = versi tahap 2; tanpa schema = tahap 1)
 POST   /uploads/wound-photo          → { uploadUrl, photoUrl }  (presigned URL R2)
 POST   /wounds/:id/photos            { src, at } → Wound   galeri foto, maks. 3 per luka
 DELETE /wounds/:id/photos/:photoId   → Wound
