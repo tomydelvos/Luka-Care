@@ -2,14 +2,26 @@ import { useRef, useState } from "react";
 import { LuCamera, LuTrash2, LuRefreshCw } from "react-icons/lu";
 import { Button, ChoiceGroup, Field, MissingHint, MultiChoice, Sheet, Toggle, Banner } from "./ui";
 import { compressImage } from "../lib/image";
-import { BED_COLOR_OPTIONS, BURN_RECHECK, FEVER_HINT, FLUID_OPTIONS_V2, LEVELS, SKIN_OPTIONS, SPREAD_OPTIONS } from "../content";
-import { assessCheckin } from "../lib/checkin";
+import {
+  BED_COLOR_OPTIONS,
+  BURN_RECHECK,
+  DANGER_REFERENCES,
+  FEVER_HINT,
+  FLUID_OPTIONS_V2,
+  LEVELS,
+  PHOTO_HELP,
+  SKIN_OPTIONS,
+  SPREAD_OPTIONS,
+  labelOf,
+} from "../content";
+import { assessCheckin, normalizeCheckin } from "../lib/checkin";
+import { ReviewRibbon } from "./ContentMeta";
 import { healingPlan } from "../lib/healing";
 import { LevelBanner } from "./LevelBanner";
 import { RichText } from "./RichText";
-import { formatShortDate } from "../lib/format";
+import { dayNumber, formatShortDate } from "../lib/format";
 import { useToast, useWounds } from "../store/AppProviders";
-import { USE_MOCK_API } from "../config/env";
+import { USE_MOCK_API, assetUrl } from "../config/env";
 import { cx } from "../lib/cx";
 
 /* ---------- Foto ---------- */
@@ -104,6 +116,71 @@ export function PainScale({ value, onChange }) {
   );
 }
 
+/* ---------- Foto sebagai alat bantu mengisi (tidak dibaca otomatis) ---------- */
+function ZoomablePhoto({ src, alt, label, onZoom }) {
+  return (
+    <figure className="min-w-0">
+      {src ? (
+        <button type="button" onClick={() => onZoom({ src, alt })} className="block w-full overflow-hidden rounded-2xl" aria-label={`Perbesar ${alt}`}>
+          <img src={src} alt={alt} className="aspect-[4/3] w-full object-cover" />
+        </button>
+      ) : (
+        <span className="grid aspect-[4/3] w-full place-items-center rounded-2xl border border-dashed border-line bg-sunken px-3 text-center text-sm text-muted">
+          Belum ada foto hari ini
+        </span>
+      )}
+      <figcaption className="tabular mt-1 text-[13px] text-muted">{label}</figcaption>
+    </figure>
+  );
+}
+
+function PhotoComparePanel({ wound, current }) {
+  const [zoom, setZoom] = useState(null);
+  const previous = [...wound.checkins].reverse().find((c) => c.photo);
+  if (!previous && !current) return null;
+  return (
+    <section aria-labelledby="bandingkan-foto" className="rounded-2xl border border-line bg-surface p-4">
+      <h3 id="bandingkan-foto" className="text-[15px] font-bold">
+        Bandingkan foto
+      </h3>
+      <p className="mt-0.5 text-sm text-muted">{PHOTO_HELP.compare}</p>
+      {zoom ? (
+        <div className="mt-3">
+          <img src={zoom.src} alt={zoom.alt} className="w-full rounded-2xl object-contain" />
+          <Button variant="secondary" size="sm" className="mt-2" onClick={() => setZoom(null)}>
+            Tutup gambar besar
+          </Button>
+        </div>
+      ) : (
+        <div className="mt-3 grid grid-cols-2 gap-3">
+          <ZoomablePhoto
+            src={previous?.photo}
+            alt={previous ? `foto luka ${formatShortDate(previous.at)}` : ""}
+            label={previous ? `Sebelumnya, hari ke-${dayNumber(wound.createdAt, new Date(previous.at))}` : "Belum ada foto sebelumnya"}
+            onZoom={setZoom}
+          />
+          <ZoomablePhoto src={current} alt="foto luka hari ini" label="Hari ini" onZoom={setZoom} />
+        </div>
+      )}
+      <p className="mt-3 text-[13px] text-muted">
+        {PHOTO_HELP.light} {PHOTO_HELP.disclaimer}
+      </p>
+    </section>
+  );
+}
+
+// Gambar contoh tanda bahaya dari buku, di samping pertanyaan yang berkaitan.
+function DangerReference({ item }) {
+  return (
+    <div className="flex gap-3 rounded-2xl bg-sunken p-3">
+      <img src={assetUrl(item.swatch)} alt={item.alt} width="360" height="360" loading="lazy" className="h-16 w-16 shrink-0 rounded-xl object-cover" />
+      <p className="text-sm text-ink-soft">
+        {item.text} <ReviewRibbon blocks={item} />
+      </p>
+    </div>
+  );
+}
+
 /* ---------- Catat kondisi harian (versi 2, PRD tahap 2 F4) ---------- */
 const EMPTY = {
   photo: null,
@@ -133,6 +210,7 @@ export function CheckInSheet({ wound, open, onClose }) {
   const askBurn = wound.type === "bakar" && plan.recheckDue;
   const ready = form.pain !== null && form.bedColors.length > 0 && form.fluid && form.spread;
   const previous = wound.checkins[wound.checkins.length - 1];
+  const previousBed = previous ? normalizeCheckin(previous).bedColors : [];
   const draft = { ...form, schema: 2, burnWorse: askBurn && form.burnWorse };
   const preview = ready ? assessCheckin(wound, draft, previous) : { level: "pantau", reasons: [] };
 
@@ -187,9 +265,10 @@ export function CheckInSheet({ wound, open, onClose }) {
           onChange={(photo) => set({ photo })}
           hint="Opsional. Pakai cahaya alami dan jarak yang sama setiap hari, dan pastikan garis pulpen ikut terfoto."
         />
+        <PhotoComparePanel wound={wound} current={form.photo} />
         <MultiChoice
           label="Warna dasar luka"
-          hint="Boleh pilih lebih dari satu."
+          hint={form.photo ? "Pilih warna yang paling mirip dengan dasar luka di foto dan yang Anda lihat langsung. Boleh lebih dari satu." : "Boleh pilih lebih dari satu."}
           options={items(BED_COLOR_OPTIONS)}
           value={form.bedColors}
           onChange={(bedColors) => set({ bedColors })}
@@ -197,10 +276,16 @@ export function CheckInSheet({ wound, open, onClose }) {
           <p className="text-sm text-muted">
             <RichText text={BED_COLOR_OPTIONS.rule} />
           </p>
+          {previousBed.length > 0 && (
+            <p className="text-sm text-muted">
+              Catatan sebelumnya: {previousBed.map((id) => labelOf(BED_COLOR_OPTIONS.items, id).toLowerCase()).join(", ")}.
+            </p>
+          )}
         </MultiChoice>
         <div className="space-y-2">
           <ChoiceGroup label="Cairan dari luka" options={items(FLUID_OPTIONS_V2)} value={form.fluid} onChange={(fluid) => set({ fluid })} />
           <p className="text-sm text-muted">{FLUID_OPTIONS_V2.note}</p>
+          <DangerReference item={DANGER_REFERENCES.cairan} />
         </div>
         <MultiChoice
           label="Kulit di sekitar luka, dibanding sisi tubuh lainnya"
@@ -208,7 +293,9 @@ export function CheckInSheet({ wound, open, onClose }) {
           options={items(SKIN_OPTIONS)}
           value={form.skin}
           onChange={(skin) => set({ skin })}
-        />
+        >
+          <DangerReference item={DANGER_REFERENCES.kulitGelap} />
+        </MultiChoice>
         <div className="space-y-2">
           <ChoiceGroup label="Garis pulpen di tepi luka" options={items(SPREAD_OPTIONS)} value={form.spread} onChange={(spread) => set({ spread })} />
           {form.spread === "belum_ditandai" && (
@@ -216,6 +303,7 @@ export function CheckInSheet({ wound, open, onClose }) {
               {SPREAD_OPTIONS.howTo}
             </Banner>
           )}
+          <DangerReference item={DANGER_REFERENCES.meluas} />
         </div>
         <PainScale value={form.pain} onChange={(pain) => set({ pain })} />
         <div className="divide-y divide-line rounded-2xl border border-line px-4">

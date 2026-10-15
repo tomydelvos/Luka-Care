@@ -8,9 +8,11 @@ export { assessDetails } from "./assessment";
 export {
   BED_COLOR_OPTIONS,
   BURN_RECHECK,
+  DANGER_REFERENCES,
   FEVER_HINT,
   FLUID_OPTIONS_V2,
   LEVELS,
+  PHOTO_HELP,
   REASONS,
   SKIN_OPTIONS,
   SPREAD_OPTIONS,

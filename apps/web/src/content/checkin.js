@@ -157,3 +157,42 @@ export const REASONS = {
     { sources: ["healthdirect-chronic"], evidence: "F" }
   ),
 };
+
+/* ---------- Gambar pembanding di formulir (foto sebagai alat bantu, bukan dibaca otomatis) ---------- */
+// Teks disalin dari Bagian C buku panduan. Gambar dari warna-dasar-luka.png (npm run crops).
+
+export const PHOTO_HELP = block(
+  {
+    compare: "Bandingkan foto hari ini dengan foto sebelumnya, lalu pilih jawaban yang paling sesuai dengan yang Anda lihat langsung.",
+    light: "Lihat di bawah cahaya alami, bukan lampu kuning.",
+    disclaimer: "LukaCare tidak membaca foto Anda. Penilaian hanya memakai jawaban yang Anda pilih.",
+  },
+  { sources: ["wi-skintones-2023"], evidence: "K" }
+);
+
+export const DANGER_REFERENCES = {
+  cairan: block(
+    {
+      swatch: "illustrations/warna/tanda-cairan-hijau.webp",
+      alt: "Contoh cairan hijau atau keruh di dasar luka",
+      text: "Hijau, keruh, nanah kental, atau bau yang baru muncul: periksakan hari ini, dan ke IGD bila disertai demam, menggigil, atau lemas berat.",
+    },
+    infection
+  ),
+  meluas: block(
+    {
+      swatch: "illustrations/warna/tanda-kemerahan-meluas.webp",
+      alt: "Contoh kemerahan yang meluas melewati garis pulpen",
+      text: "Kemerahan, keunguan, cokelat gelap, atau keabuan yang meluas melewati garis pulpen, garis yang menjalar dari luka, atau kulit yang mengeras: periksakan hari ini, dan ke IGD bila demam.",
+    },
+    skinTone
+  ),
+  kulitGelap: block(
+    {
+      swatch: "illustrations/warna/tanda-kulit-gelap.webp",
+      alt: "Contoh peradangan keunguan pada kulit sawo matang gelap",
+      text: "Perhatikan warna yang lebih gelap, keunguan, atau keabuan dibanding kulit sekitarnya.",
+    },
+    skinTone
+  ),
+};
