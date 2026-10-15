@@ -7,6 +7,7 @@ import { EMERGENCY_LEAD, LEVEL_COPY, RED_FLAGS } from "./redFlags";
 import { CAUTIONS, ESCALATIONS } from "./assessment";
 import { CHECKIN_WARNINGS, FEVER_HINT } from "./checkin";
 import { CASE_STORIES } from "./caseStories";
+import { CHAPTERS, LIBRARY_INTRO, WOUND_COLORS } from "./library";
 
 const CONTENT = {
   wounds: Object.fromEntries(Object.entries(WOUND_GUIDES).map(([id, g]) => [id, { blocks: g.blocks, avoid: g.avoid }])),
@@ -20,6 +21,9 @@ const CONTENT = {
   checkinWarnings: CHECKIN_WARNINGS,
   feverHint: FEVER_HINT,
   caseStories: CASE_STORIES,
+  libraryIntro: LIBRARY_INTRO,
+  chapters: CHAPTERS.map((c) => ({ [c.slug]: c.nodes })),
+  woundColors: WOUND_COLORS.map((g) => g.nodes),
 };
 
 // Daftar { path, block } untuk setiap blok. Blok di dalam blok tidak dicari lagi.

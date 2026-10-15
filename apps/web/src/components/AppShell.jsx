@@ -1,4 +1,4 @@
-import { LuHouse, LuHeartPulse, LuClipboardList, LuShoppingBag, LuPhone, LuUserRound, LuShoppingCart } from "react-icons/lu";
+import { LuHouse, LuHeartPulse, LuBookOpen, LuClipboardList, LuShoppingBag, LuPhone, LuUserRound, LuShoppingCart } from "react-icons/lu";
 import { Link, useRouter, isActivePath } from "../lib/router";
 import { cx } from "../lib/cx";
 import { Logo } from "./art";
@@ -9,6 +9,7 @@ import { APP_ENV } from "../config/env";
 const NAV = [
   { to: "/", label: "Beranda", icon: LuHouse },
   { to: "/panduan", label: "Panduan", icon: LuHeartPulse },
+  { to: "/pustaka", label: "Pustaka", icon: LuBookOpen },
   { to: "/pantau", label: "Pantau", icon: LuClipboardList },
   { to: "/belanja", label: "Belanja", icon: LuShoppingBag },
 ];
@@ -69,7 +70,7 @@ function BottomNav() {
       aria-label="Navigasi utama"
       className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-md lg:hidden"
     >
-      <ul className="mx-auto grid max-w-3xl grid-cols-4">
+      <ul className="mx-auto grid max-w-3xl grid-cols-5">
         {NAV.map(({ to, label, icon: Icon }) => {
           const active = isActivePath(pathname, to);
           const badge = badges[to];

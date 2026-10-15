@@ -7,4 +7,14 @@ export { RED_FLAGS, RED_FLAG_BY_ID, LEVEL_COPY, EMERGENCY_LEAD, strongestLevel }
 export { assessDetails } from "./assessment";
 export { CHECKIN_WARNINGS, FEVER_HINT } from "./checkin";
 export { CARE_LEVELS, CASE_GROUPS, CASE_STORIES, casesFor } from "./caseStories";
+export {
+  CHAPTERS,
+  CHAPTER_BY_SLUG,
+  CHAPTER_FOR_GUIDE,
+  CHAPTER_FOR_REASON,
+  LIBRARY_INTRO,
+  LIBRARY_PARTS,
+  WOUND_COLORS,
+  chapterFigure,
+} from "./library";
 export * from "./options";

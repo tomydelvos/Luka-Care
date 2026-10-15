@@ -12,7 +12,7 @@ lukacare/
 │       ├── public/           favicon, illustrations/ (16 ilustrasi PNG; kecil/, potongan/, warna/ = WebP)
 │       ├── src/
 │       │   ├── config/       env.js — satu-satunya tempat membaca VITE_*
-│       │   ├── content/      konten medis bersumber: panduan per jenis luka, tanda bahaya, contoh kasus, sumber
+│       │   ├── content/      konten medis bersumber: panduan per jenis luka, tanda bahaya, contoh kasus, pustaka, sumber
 │       │   ├── data/         data non-medis: katalog produk, profile kontak
 │       │   ├── lib/          router, storage, format, kompres foto
 │       │   ├── services/     authService, woundService (mock ↔ API)
@@ -81,6 +81,7 @@ Data lokal (akun, luka, foto) tersimpan di `apps/api/.wrangler/`.
 | `/belanja`, `/keranjang`, `/checkout` | Katalog per kategori, filter `?untuk=<jenis luka>`, keranjang, checkout (mode demo) |
 | `/darurat` | Nomor 119 dan 112, cari faskes terdekat, semua tanda bahaya beserta yang bisa dilakukan |
 | `/masuk`, `/daftar`, `/akun` | Autentikasi, persetujuan data kesehatan, unduh/hapus data |
+| `/pustaka`, `/pustaka/:jenis`, `/pustaka/warna-luka` | Pustaka 10 jenis luka dari buku panduan (Bagian A dan B) dengan ilustrasi tampak atas dan penampang, langkah, larangan, waktu pulih, kapan periksa, contoh kasus, dan sumber; Bagian C tentang warna luka dan waktu pulih |
 | `/sumber` | Semua rujukan konten medis per topik dan arti label asal data |
 
 ## Prinsip produk yang diterapkan

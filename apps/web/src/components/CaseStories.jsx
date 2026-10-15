@@ -102,7 +102,7 @@ function CaseCard({ story, matched, onOpen }) {
 }
 
 /* ---------- Isi lengkap satu kasus ---------- */
-function CaseDetail({ story }) {
+export function CaseDetail({ story }) {
   const care = CARE_LEVELS[story.care];
   return (
     <div>

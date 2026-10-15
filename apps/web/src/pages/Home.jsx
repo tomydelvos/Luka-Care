@@ -65,6 +65,9 @@ export default function Home() {
             </li>
           ))}
         </ul>
+        <Link to="/pustaka" className="mt-2.5 inline-flex min-h-11 items-center text-sm font-semibold text-pine">
+          Belum yakin? Kenali 10 jenis luka di pustaka
+        </Link>
       </nav>
 
       <div className="mt-10 grid gap-10 lg:grid-cols-[1.35fr_1fr] lg:gap-12">

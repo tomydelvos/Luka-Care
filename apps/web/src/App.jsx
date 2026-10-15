@@ -13,6 +13,9 @@ import Emergency from "./pages/Emergency";
 import { Login, Register } from "./pages/Auth";
 import Account from "./pages/Account";
 import Sources from "./pages/Sources";
+import Library from "./pages/Library";
+import LibraryChapter from "./pages/LibraryChapter";
+import WoundColors from "./pages/WoundColors";
 import NotFound from "./pages/NotFound";
 
 const ROUTES = [
@@ -28,6 +31,9 @@ const ROUTES = [
   { path: "/daftar", render: () => <Register /> },
   { path: "/akun", render: () => <Account /> },
   { path: "/sumber", render: () => <Sources /> },
+  { path: "/pustaka", render: () => <Library /> },
+  { path: "/pustaka/warna-luka", render: () => <WoundColors /> },
+  { path: "/pustaka/:jenis", render: ({ jenis }) => <LibraryChapter slug={jenis} /> },
 ];
 
 // Panduan dibuka dalam mode fokus: tanpa navigasi bawah agar pengguna

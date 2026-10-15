@@ -1,6 +1,7 @@
 import { LuPhone, LuMapPin, LuArrowLeft } from "react-icons/lu";
 import { Button } from "./ui";
-import { LEVEL_COPY } from "../content";
+import { CHAPTER_FOR_REASON, LEVEL_COPY } from "../content";
+import { Link } from "../lib/router";
 import { EMERGENCY_NUMBERS, NEAREST_FACILITY_URL } from "../config/env";
 import { cx } from "../lib/cx";
 import { ReviewRibbon, SourcesButton } from "./ContentMeta";
@@ -70,6 +71,11 @@ export function EscalationView({ reasons, onBack, backLabel = "Kembali" }) {
                 {reason.title} <ReviewRibbon blocks={reason} />
               </p>
               <p className="mt-0.5 text-sm text-muted">{reason.detail}</p>
+              {CHAPTER_FOR_REASON[reason.id] && (
+                <Link to={`/pustaka/${CHAPTER_FOR_REASON[reason.id].slug}`} className="mt-1 inline-flex min-h-11 items-center text-sm font-semibold text-pine">
+                  Baca Bab {CHAPTER_FOR_REASON[reason.id].number}: {CHAPTER_FOR_REASON[reason.id].title.toLowerCase()}
+                </Link>
+              )}
               <ol className="mt-3 space-y-2">
                 {reason.whileWaiting.map((step, i) => (
                   <li key={step} className="flex gap-3 text-[15px] text-ink-soft">
