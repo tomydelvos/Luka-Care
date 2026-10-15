@@ -9,7 +9,7 @@ lukacare/
 ├── apps/
 │   ├── api/                  API Cloudflare Worker (Hono) + D1 + R2, test Vitest
 │   └── web/                  Frontend React (Vite + Tailwind CSS v4)
-│       ├── public/           favicon
+│       ├── public/           favicon, illustrations/ (16 ilustrasi luka, kecil/ = WebP untuk kartu)
 │       ├── src/
 │       │   ├── config/       env.js — satu-satunya tempat membaca VITE_*
 │       │   ├── data/         konten panduan luka, tanda bahaya, katalog produk
@@ -22,7 +22,12 @@ lukacare/
 │       ├── vite.config.js    dev server di port 3001
 │       └── wrangler.jsonc    deploy ke Cloudflare (lukacare.com & staging)
 ├── docs/
+│   ├── prd-tahap-2.md        PRD tahap 2: konten berbasis riset di web
+│   ├── buku-panduan/         Buku Panduan Perawatan Luka Luar (markdown)
+│   ├── riset/                laporan riset warna luka dan waktu pulih + catatan
 │   └── catatan-prd-awal.txt  catatan diskusi PRD awal
+├── tools/
+│   └── illustrations/        kode penggambar ilustrasi luka (SVG → PNG)
 ├── CLAUDE.md                 konteks dan aturan kerja untuk Claude Code
 └── README.md
 ```
@@ -67,7 +72,7 @@ Data lokal (akun, luka, foto) tersimpan di `apps/api/.wrangler/`.
 | Rute | Isi |
 | --- | --- |
 | `/` | Beranda: mulai panduan, luka yang dipantau, P3K dasar, tanda kapan ke dokter |
-| `/panduan` | Alur 6 langkah: tanda bahaya → jenis luka → detail → perawatan (dengan timer) → perlengkapan → simpan untuk dipantau. Bisa langsung ke jenis tertentu dengan `?jenis=lecet\|sayatan\|bakar\|lepuh` |
+| `/panduan` | Alur 6 langkah: tanda bahaya → jenis luka → detail (dengan 10 contoh kasus kronologis) → perawatan (dengan timer, footer profile kontak) → perlengkapan → simpan untuk dipantau. Bisa langsung ke jenis tertentu dengan `?jenis=lecet\|sayatan\|bakar\|lepuh` |
 | `/pantau`, `/pantau/:id` | Daftar luka, catatan harian (foto, skala nyeri 0–10, kemerahan, cairan, demam), grafik nyeri, perbandingan foto awal vs terbaru, galeri foto (maks. 3 per luka) |
 | `/belanja`, `/keranjang`, `/checkout` | Katalog per kategori, filter `?untuk=<jenis luka>`, keranjang, checkout (mode demo) |
 | `/darurat` | Nomor 119 dan 112, cari faskes terdekat, semua tanda bahaya beserta yang bisa dilakukan |
@@ -145,6 +150,7 @@ Foto dan catatan luka termasuk data kesehatan, yang dalam UU No. 27 Tahun 2022 (
 
 ## Langkah berikutnya
 
+- [ ] Tahap 2: konten berbasis riset di web (`docs/prd-tahap-2.md`)
 - [ ] Review konten medis oleh tenaga kesehatan
 - [x] `apps/api`: Worker + D1 (`users`, `wounds`, `wound_examinations`, `wound_photos`) + R2
 - [x] Sambungkan frontend ke API (development memakai API lokal)

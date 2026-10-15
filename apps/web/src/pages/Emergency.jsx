@@ -45,11 +45,11 @@ export default function Emergency() {
             href={`tel:${n.number}`}
             className={
               i === 0
-                ? "flex items-center gap-4 rounded-[1.5rem] bg-alert p-5 text-white"
+                ? "flex items-center gap-4 rounded-[1.5rem] bg-alert p-5 text-on-alert"
                 : "flex items-center gap-4 rounded-[1.5rem] border border-alert/30 bg-alert-soft p-5 text-ink"
             }
           >
-            <span className={i === 0 ? "grid h-12 w-12 place-items-center rounded-full bg-white/20" : "grid h-12 w-12 place-items-center rounded-full bg-surface text-alert"}>
+            <span className={i === 0 ? "grid h-12 w-12 place-items-center rounded-full bg-on-alert/20" : "grid h-12 w-12 place-items-center rounded-full bg-surface text-alert"}>
               <LuPhone size={22} aria-hidden="true" />
             </span>
             <span>

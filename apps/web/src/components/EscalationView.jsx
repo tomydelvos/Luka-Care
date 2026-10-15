@@ -14,28 +14,28 @@ export function EscalationView({ reasons, onBack, backLabel = "Kembali" }) {
       <section
         className={cx(
           "rounded-[1.75rem] border p-5 sm:p-7",
-          urgent ? "border-alert bg-alert text-white" : "border-alert/30 bg-alert-soft text-ink"
+          urgent ? "border-alert bg-alert text-on-alert" : "border-alert/30 bg-alert-soft text-ink"
         )}
         aria-labelledby="eskalasi-judul"
       >
         <h1 id="eskalasi-judul" className="text-[1.6rem] font-extrabold sm:text-3xl">
           {copy.heading}
         </h1>
-        <p className={cx("mt-2 max-w-prose text-[15px]", urgent ? "text-white/90" : "text-ink-soft")}>{copy.lead}</p>
+        <p className={cx("mt-2 max-w-prose text-[15px]", urgent ? "text-on-alert/90" : "text-ink-soft")}>{copy.lead}</p>
 
         <div className="mt-5 flex flex-col gap-2.5 sm:flex-row">
           {urgent ? (
             <>
               <a
                 href="tel:119"
-                className="inline-flex h-14 items-center sm:flex-1 justify-center gap-2 rounded-full bg-white text-lg font-extrabold text-alert"
+                className="inline-flex h-14 items-center sm:flex-1 justify-center gap-2 rounded-full bg-on-alert text-lg font-extrabold text-alert"
               >
                 <LuPhone size={20} aria-hidden="true" />
                 Telepon 119
               </a>
               <a
                 href="tel:112"
-                className="inline-flex h-14 items-center justify-center gap-2 rounded-full border border-white/50 px-6 font-bold text-white sm:flex-none"
+                className="inline-flex h-14 items-center justify-center gap-2 rounded-full border border-on-alert/50 px-6 font-bold text-on-alert sm:flex-none"
               >
                 Telepon 112
               </a>

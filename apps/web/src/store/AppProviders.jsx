@@ -29,7 +29,7 @@ function ToastProvider({ children }) {
           <div
             key={toast.key}
             className={`toast-in pointer-events-auto max-w-sm rounded-2xl px-4 py-3 text-sm font-semibold shadow-lg ${
-              toast.tone === "alert" ? "bg-alert text-white" : "bg-ink text-canvas"
+              toast.tone === "alert" ? "bg-alert text-on-alert" : "bg-ink text-canvas"
             }`}
           >
             {toast.message}

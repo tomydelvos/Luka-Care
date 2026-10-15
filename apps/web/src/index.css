@@ -19,6 +19,9 @@
   --lc-pine-strong: #0a5244;
   --lc-pine-soft: #dcefe7;
   --lc-on-pine: #ffffff;
+  --lc-on-alert: #ffffff;
+  --lc-on-mint: #ffffff;
+  --lc-on-plaster: #2b1a0c;
   --lc-plaster: #e9be93;
   --lc-plaster-deep: #c98f5c;
   --lc-plaster-soft: #f8eadb;
@@ -44,8 +47,11 @@
     --lc-pine-strong: #74d6b7;
     --lc-pine-soft: #153a30;
     --lc-on-pine: #052019;
+    --lc-on-alert: #2a070c;
+    --lc-on-mint: #052019;
+    --lc-on-plaster: #ffffff;
     --lc-plaster: #cf9f71;
-    --lc-plaster-deep: #9c6d43;
+    --lc-plaster-deep: #996a41;
     --lc-plaster-soft: #2e251b;
     --lc-alert: #ff6b78;
     --lc-alert-soft: #3a1a1f;
@@ -69,8 +75,11 @@
   --lc-pine-strong: #74d6b7;
   --lc-pine-soft: #153a30;
   --lc-on-pine: #052019;
+  --lc-on-alert: #2a070c;
+  --lc-on-mint: #052019;
+  --lc-on-plaster: #ffffff;
   --lc-plaster: #cf9f71;
-  --lc-plaster-deep: #9c6d43;
+  --lc-plaster-deep: #996a41;
   --lc-plaster-soft: #2e251b;
   --lc-alert: #ff6b78;
   --lc-alert-soft: #3a1a1f;
@@ -97,6 +106,9 @@
   --color-pine-strong: var(--lc-pine-strong);
   --color-pine-soft: var(--lc-pine-soft);
   --color-on-pine: var(--lc-on-pine);
+  --color-on-alert: var(--lc-on-alert);
+  --color-on-mint: var(--lc-on-mint);
+  --color-on-plaster: var(--lc-on-plaster);
   --color-plaster: var(--lc-plaster);
   --color-plaster-deep: var(--lc-plaster-deep);
   --color-plaster-soft: var(--lc-plaster-soft);

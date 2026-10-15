@@ -40,6 +40,16 @@ Frontend belum punya linter maupun test; API punya test Vitest. Kalau menambahka
 - Galeri foto di `/pantau/:id` (`src/components/PhotoGallery.jsx`) dibatasi `MAX_GALLERY_PHOTOS` = 3 per luka, terpisah dari foto catatan harian.
 - Katalog produk di `src/data/products.js` masih contoh dengan nama generik.
 - Backend `apps/api` (Hono di Cloudflare Worker + D1 + R2) sudah ada dan teruji, tapi belum di-deploy. Kontraknya sama dengan `src/services/woundService.js` dan `authService.js`; ubah keduanya bersamaan. Batas galeri (`MAX_GALLERY_PHOTOS`) didefinisikan di frontend dan di `apps/api/src/routes/wounds.js`.
+- **Tahap 2 sedang direncanakan:** `docs/prd-tahap-2.md`. Isinya memasukkan buku panduan dan hasil riset ke web. Kerjakan berurutan M1 → M5 sesuai PRD.
+
+## Konten dan riset
+
+- `docs/buku-panduan/buku-panduan-perawatan-luka-luar.md`: buku panduan 10 jenis luka (Bagian A rawat di rumah, Bagian B perlu tenaga kesehatan, Bagian C warna luka dan waktu pulih), tabel tanda bahaya, kotak P3K, dan sumber. Ini salinan dari doc Claude tempat klinisi memberi komentar.
+- `docs/riset/waktu-penyembuhan-luka-berdasarkan-warna.md`: laporan riset lengkap; `docs/riset/catatan/` berisi catatan mentah per topik. Bagian "Sumber berselisih" dan "Celah bukti" wajib dibaca sebelum menulis angka apa pun.
+- `apps/web/public/illustrations/`: 16 ilustrasi PNG (2x) dan `kecil/` (WebP tampak atas untuk kartu). Kodenya di `tools/illustrations/` (lihat README di sana; `npm run thumbs` untuk WebP). Ubah gambar lewat kode, jangan edit PNG langsung.
+- `src/data/caseStories.js`: 10 contoh kasus dari buku, tampil di langkah 3 panduan lewat `CaseStories`. Konten medis, ikut aturan tinjauan klinisi. Jika buku berubah, ubah juga file ini.
+- `src/data/contact.js`: profile kontak di footer langkah 4 (`ContactProfile`). Nilainya masih contoh; isi data asli sebelum rilis dan jangan tampilkan nomor yang belum aktif.
+- Temuan riset yang mengikat desain: warna dasar luka = tahap, lapisan kulit = lama pulih; tidak ada angka hari per warna; waktu ditampilkan sebagai batas periksa; kemerahan tidak boleh jadi satu-satunya tanda bahaya karena sering tidak terlihat di kulit sawo matang.
 
 ## Aturan produk (jangan dilanggar tanpa diskusi)
 
@@ -56,7 +66,7 @@ Frontend belum punya linter maupun test; API punya test Vitest. Kalau menambahka
 - **Router**: modul kecil sendiri di `src/lib/router.jsx` (mode `history`, `hash`, `memory`), API mirip react-router (`Link`, `useRouter().navigate`, `Routes`). Boleh diganti react-router v7 bila perlu fitur lebih (loader, nested layout).
 - **Data layer**: komponen tidak memanggil `fetch` langsung. Semua lewat `src/services/*`, yang memilih implementasi mock atau HTTP berdasarkan `USE_MOCK_API`. State global ada di `src/store/AppProviders.jsx` (`useAuth`, `useWounds`, `useCart`, `useToast`).
 - **Env**: hanya dibaca di `src/config/env.js`. Jangan taruh secret di `VITE_*`.
-- **Styling**: Tailwind v4 dengan token warna di `src/index.css` (`--lc-*`, dipetakan ke kelas seperti `bg-pine`, `text-muted`, `bg-alert-soft`). Selalu pakai token, jangan hex literal, agar mode gelap tetap benar. Merah (`alert`) hanya untuk bahaya atau darurat.
+- **Styling**: Tailwind v4 dengan token warna di `src/index.css` (`--lc-*`, dipetakan ke kelas seperti `bg-pine`, `text-muted`, `bg-alert-soft`). Selalu pakai token, jangan hex literal, agar mode gelap tetap benar. Teks dan ikon di atas warna solid memakai pasangan `on-*` (`text-on-pine`, `text-on-alert`, `text-on-mint`, `text-on-plaster`), bukan `text-white`: di mode gelap warna dasarnya terang sehingga teks putih tidak terbaca. Kontras minimal 4,5:1. Merah (`alert`) hanya untuk bahaya atau darurat.
 - **Komponen UI** dasar ada di `src/components/ui.jsx` (`Button`, `ChoiceGroup`, `Field`, `Sheet`, `Banner`, `Badge`, `QtyStepper`, `Toggle`). Pakai ulang sebelum membuat yang baru.
 - **Identitas visual**: motif plester (kelas `plaster-wing` dan `plaster-pad`) hanya dipakai di hero beranda dan logo. Font Plus Jakarta Sans dari Google Fonts.
 - **Copy**: Bahasa Indonesia, sapaan "Anda", sentence case, kalimat aktif dan pendek. Tombol menyebut aksinya ("Simpan catatan", bukan "Submit"). Pesan error menjelaskan apa yang salah dan cara memperbaikinya.
@@ -65,7 +75,8 @@ Frontend belum punya linter maupun test; API punya test Vitest. Kalau menambahka
 
 ## Langkah berikutnya
 
-- [ ] Review konten medis oleh tenaga kesehatan
+- [ ] Tahap 2 sesuai `docs/prd-tahap-2.md` (konten terstruktur, pustaka luka, catatan harian v2, batas periksa)
+- [ ] Review konten medis oleh tenaga kesehatan (daftar tinjauan ada di PRD tahap 2, F10)
 - [ ] Tambah ESLint dan beberapa test (Vitest + Testing Library) untuk `assessDetails`, `checkinWarnings`, dan alur panduan
 - [x] `apps/api`: Worker + D1 (`users`, `wounds`, `wound_examinations`, `wound_photos`) + R2
 - [x] Sambungkan frontend ke API (development) dan alur simpan luka tanpa login (minta daftar di langkah 6)
