@@ -2,6 +2,7 @@ import { useEffect, useId, useRef } from "react";
 import { LuX, LuMinus, LuPlus, LuTriangleAlert, LuInfo, LuCircleCheck } from "react-icons/lu";
 import { Link } from "../lib/router";
 import { cx } from "../lib/cx";
+import { assetUrl } from "../config/env";
 
 /* ---------- Button ---------- */
 const VARIANTS = {
@@ -84,6 +85,55 @@ export function ChoiceGroup({ label, hint, options, value, onChange, columns = f
 }
 
 /* ---------- Toggle ---------- */
+/* ---------- MultiChoice ---------- */
+// Pilihan "boleh lebih dari satu". Opsi dengan `swatch` tampil sebagai kartu bergambar.
+export function MultiChoice({ label, hint, options, value, onChange, children }) {
+  const id = useId();
+  const selected = new Set(value);
+  const toggle = (optId) => onChange(selected.has(optId) ? value.filter((v) => v !== optId) : [...value, optId]);
+  const withSwatch = options.some((o) => o.swatch);
+  return (
+    <fieldset className="space-y-2.5">
+      <legend id={id} className="text-[15px] font-bold text-ink">
+        {label}
+      </legend>
+      {hint && <p className="-mt-1 text-sm text-muted">{hint}</p>}
+      <div className={cx(withSwatch ? "grid grid-cols-2 gap-2 sm:grid-cols-3" : "flex flex-wrap gap-2")} role="group" aria-labelledby={id}>
+        {options.map((opt) => {
+          const on = selected.has(opt.id);
+          return (
+            <button
+              key={opt.id}
+              type="button"
+              aria-pressed={on}
+              onClick={() => toggle(opt.id)}
+              className={cx(
+                "min-h-11 border text-left text-[15px] font-medium transition-colors",
+                withSwatch ? "flex flex-col overflow-hidden rounded-2xl" : "rounded-full px-4 py-2",
+                on ? "border-pine bg-pine text-on-pine" : "border-line bg-surface text-ink hover:border-muted"
+              )}
+            >
+              {withSwatch &&
+                (opt.swatch ? (
+                  <img src={assetUrl(opt.swatch)} alt="" width="360" height="240" loading="lazy" className="aspect-[3/2] w-full object-cover" />
+                ) : (
+                  <span className="grid aspect-[3/2] w-full place-items-center bg-sunken text-[13px] text-muted" aria-hidden="true">
+                    Tanpa gambar
+                  </span>
+                ))}
+              <span className={cx(withSwatch && "px-3 py-2")}>
+                <span className="block">{opt.label}</span>
+                {withSwatch && opt.hint && <span className={cx("block text-[13px]", on ? "text-on-pine/85" : "text-muted")}>{opt.hint}</span>}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+      {children}
+    </fieldset>
+  );
+}
+
 export function Toggle({ label, description, checked, onChange }) {
   const id = useId();
   return (

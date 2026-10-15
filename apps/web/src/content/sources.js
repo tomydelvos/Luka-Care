@@ -1,5 +1,6 @@
 // Semua rujukan dari bagian "Sumber" di buku panduan
-// (docs/buku-panduan/buku-panduan-perawatan-luka-luar.md). Tampil di halaman /sumber.
+// (docs/buku-panduan/buku-panduan-perawatan-luka-luar.md), ditambah rujukan aturan catatan harian
+// dari laporan riset (docs/riset/waktu-penyembuhan-luka-berdasarkan-warna.md). Tampil di halaman /sumber.
 // `usedFor` menyalin keterangan di buku: bagian mana yang diambil dari sumber itu.
 
 export const SOURCE_TOPICS = [
@@ -45,6 +46,9 @@ export const SOURCES = [
   { id: "griffin-2020", topic: "bakar", title: "Air mengalir mengurangi cangkok kulit", publisher: "Griffin dkk.", year: 2020, url: "https://em-consulte.com/article/1340436/cool-running-water-first-aid-decreases-skin-grafti", usedFor: "air mengalir 20 menit pada 2.495 anak" },
   { id: "hyland-2013", topic: "bakar", title: "Luka bakar knalpot pada anak", publisher: "Hyland dkk., Medical Journal of Australia", year: 2013, url: "https://www.mja.com.au/journal/2013/198/10/burns-motorcycle-exhausts-among-children-new-south-wales-continuing-problem", usedFor: "luka bakar knalpot pada anak" },
   { id: "dermtimes-2025", topic: "infeksi", title: "Luka bakar pada kulit berwarna", publisher: "Dermatology Times", year: 2025, url: "https://dermatologytimes.com/view/burn-care-disparities-in-skin-of-color", usedFor: "luka bakar pada kulit berwarna" },
+  { id: "nhs-forth-valley", topic: "infeksi", title: "Wound infection pathway", publisher: "NHS Forth Valley, berbasis IWII 2022", year: 2026, url: "https://nhsforthvalley.com/wp-content/uploads/2026/02/NHS-Forth-Valley-Wound-Infection-Pathway.pdf", usedFor: "nanah dan bau baru sebagai tanda infeksi, slough sebagai urusan pembersihan" },
+  { id: "oxford-hypergranulation", topic: "penyembuhan", title: "Hypergranulation pathway", publisher: "Oxford Health NHS", year: 2023, url: "https://oxfordhealth.nhs.uk/wp-content/uploads/sites/51/2024/01/Hypergranulation-Pathway-FINAL.pdf", usedFor: "jaringan merah menonjol dan granulasi bermasalah" },
+  { id: "hee-cellulitis", topic: "infeksi", title: "Cellulitis", publisher: "Health Education England", year: null, url: "https://www.hee.nhs.uk/sites/default/files/documents/Cellulitis.pdf", usedFor: "menandai batas kemerahan dengan pulpen, demam 37,7 °C" },
 ];
 
 export const SOURCE_BY_ID = Object.fromEntries(SOURCES.map((s) => [s.id, s]));

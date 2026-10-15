@@ -3,11 +3,14 @@ import { Link } from "../lib/router";
 import { WoundArt } from "./art";
 import { Badge } from "./ui";
 import { dayNumber, formatDate, isToday } from "../lib/format";
-import { latestWarnings } from "../lib/checkin";
+import { assessWound } from "../lib/checkin";
+import { LEVELS } from "../content";
 
 export function woundStatus(wound) {
   if (wound.status === "sembuh") return { tone: "mint", label: "Pulih" };
-  if (latestWarnings(wound).length) return { tone: "alert", label: "Perlu diperiksakan" };
+  const { level } = assessWound(wound);
+  if (level === "igd" || level === "hari_ini") return { tone: "alert", label: LEVELS[level].label };
+  if (level === "beberapa_hari") return { tone: "caution", label: LEVELS[level].label };
   if (!wound.checkins.some((c) => isToday(c.at))) return { tone: "caution", label: "Belum dicek hari ini" };
   return { tone: "pine", label: "Sudah dicek" };
 }

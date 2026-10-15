@@ -8,10 +8,13 @@ export const formatRupiah = (n) => rupiah.format(n).replace(/\u00a0/g, " ");
 
 const dateFmt = new Intl.DateTimeFormat("id-ID", { day: "numeric", month: "short", year: "numeric" });
 const shortFmt = new Intl.DateTimeFormat("id-ID", { day: "numeric", month: "short" });
+const dayDateFmt = new Intl.DateTimeFormat("id-ID", { weekday: "long", day: "numeric", month: "short" });
 const timeFmt = new Intl.DateTimeFormat("id-ID", { hour: "2-digit", minute: "2-digit" });
 
 export const formatDate = (iso) => dateFmt.format(new Date(iso));
 export const formatShortDate = (iso) => shortFmt.format(new Date(iso));
+// "Kamis, 23 Okt": untuk batas periksa, dihitung di zona waktu perangkat.
+export const formatDayDate = (date) => dayDateFmt.format(new Date(date)).replace(/\./g, "");
 export const formatTime = (iso) => timeFmt.format(new Date(iso)).replace(".", ":");
 
 const startOfDay = (d) => {

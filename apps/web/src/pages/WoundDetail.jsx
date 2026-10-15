@@ -1,16 +1,27 @@
 import { useState } from "react";
 import { LuArrowLeft, LuNotebookPen, LuCircleCheck, LuTrash2, LuChevronDown } from "react-icons/lu";
 import { Link, useRouter } from "../lib/router";
-import { Badge, Banner, Button, Sheet } from "../components/ui";
+import { Badge, Button, Sheet } from "../components/ui";
 import { WoundArt } from "../components/art";
 import { CheckInSheet, PainChart } from "../components/monitor";
 import { PhotoGallery } from "../components/PhotoGallery";
 import { ProductRow, ProductSheet } from "../components/shop";
 import { woundStatus } from "../components/WoundRow";
-import { CHAPTER_FOR_GUIDE, WOUND_GUIDES, MONITOR_SIGNS } from "../content";
+import {
+  BED_COLOR_OPTIONS,
+  CHAPTER_FOR_GUIDE,
+  FLUID_OPTIONS_V2,
+  LEVELS,
+  MONITOR_SIGNS,
+  SKIN_OPTIONS,
+  SPREAD_OPTIONS,
+  WOUND_GUIDES,
+} from "../content";
 import { AREA_OPTIONS, FLUID_OPTIONS, REDNESS_OPTIONS, labelOf } from "../content";
 import { PRODUCTS } from "../data/products";
-import { latestWarnings, checkinWarnings } from "../lib/checkin";
+import { assessCheckin, assessWound, normalizeCheckin } from "../lib/checkin";
+import { LevelBanner } from "../components/LevelBanner";
+import { HealingPanel } from "../components/HealingPanel";
 import { dayNumber, formatDate, formatShortDate, formatTime, isToday, relativeDay } from "../lib/format";
 import { useToast, useWounds } from "../store/AppProviders";
 
@@ -48,15 +59,26 @@ function PhotoCompare({ wound }) {
   );
 }
 
-function CheckinItem({ checkin, previous, wound }) {
-  const warnings = checkinWarnings(checkin, previous);
-  const facts = [
-    `Kemerahan: ${labelOf(REDNESS_OPTIONS, checkin.redness).toLowerCase()}`,
-    `Cairan: ${labelOf(FLUID_OPTIONS, checkin.fluid).toLowerCase()}`,
-    checkin.swelling && "Bengkak atau panas",
-    checkin.fever && "Demam",
-    checkin.dressingChanged && "Penutup diganti",
+const labels = (block, ids) => ids.map((id) => labelOf(block.items, id).toLowerCase()).join(", ");
+
+// Ringkasan isian satu catatan. Catatan tahap 1 tetap ditampilkan dengan istilah lamanya.
+function checkinFacts(raw) {
+  const c = normalizeCheckin(raw);
+  const legacy = c.legacy;
+  return [
+    legacy ? `Kemerahan: ${labelOf(REDNESS_OPTIONS, legacy.redness).toLowerCase()}` : c.bedColors.length && `Dasar luka: ${labels(BED_COLOR_OPTIONS, c.bedColors)}`,
+    `Cairan: ${legacy ? labelOf(FLUID_OPTIONS, legacy.fluid).toLowerCase() : labelOf(FLUID_OPTIONS_V2.items, c.fluid).toLowerCase()}`,
+    legacy ? legacy.swelling && "Bengkak atau panas" : c.skin.length && `Kulit sekitar: ${labels(SKIN_OPTIONS, c.skin)}`,
+    !legacy && c.spread && `Garis pulpen: ${labelOf(SPREAD_OPTIONS.items, c.spread).toLowerCase()}`,
+    c.newOdor && "Bau baru",
+    c.fever && "Demam atau lemas",
+    c.dressingChanged && "Penutup diganti",
   ].filter(Boolean);
+}
+
+function CheckinItem({ checkin, previous, wound }) {
+  const { level } = assessCheckin(wound, checkin, previous);
+  const facts = checkinFacts(checkin);
   return (
     <li className="flex gap-4 py-4">
       {checkin.photo ? (
@@ -78,9 +100,9 @@ function CheckinItem({ checkin, previous, wound }) {
         </div>
         <p className="mt-1 text-sm text-muted">{facts.join(". ")}.</p>
         {checkin.note && <p className="mt-1.5 text-[15px] text-ink-soft">{checkin.note}</p>}
-        {warnings.length > 0 && (
-          <Badge tone="alert" className="mt-2">
-            {warnings[0]}
+        {level !== "pantau" && (
+          <Badge tone={level === "beberapa_hari" ? "caution" : "alert"} className="mt-2">
+            {LEVELS[level].label}
           </Badge>
         )}
       </div>
@@ -112,7 +134,7 @@ export default function WoundDetail({ id }) {
 
   const guide = WOUND_GUIDES[wound.type];
   const status = woundStatus(wound);
-  const warnings = latestWarnings(wound);
+  const assessment = assessWound(wound);
   const checkedToday = wound.checkins.some((c) => isToday(c.at));
   const history = [...wound.checkins].reverse();
   const supplies = PRODUCTS.filter((p) => p.forTypes.includes(wound.type) && p.category !== "p3k").slice(0, 3);
@@ -142,25 +164,7 @@ export default function WoundDetail({ id }) {
         </div>
       </header>
 
-      {active && warnings.length > 0 && (
-        <Banner
-          tone="alert"
-          className="mt-6"
-          title="Catatan terakhir menunjukkan tanda yang perlu diperiksakan"
-          action={
-            <Button to="/darurat" variant="danger" size="sm">
-              Lihat nomor darurat dan faskes
-            </Button>
-          }
-        >
-          <ul className="list-disc space-y-0.5 pl-5">
-            {warnings.map((w) => (
-              <li key={w}>{w}</li>
-            ))}
-          </ul>
-          <p className="mt-2">Periksakan ke puskesmas, klinik, atau IGD hari ini.</p>
-        </Banner>
-      )}
+      {active && <LevelBanner assessment={assessment} className="mt-6" />}
 
       {active && (
         <div className="mt-6 flex flex-col gap-3 rounded-[1.5rem] bg-pine-soft p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
@@ -174,6 +178,8 @@ export default function WoundDetail({ id }) {
           </Button>
         </div>
       )}
+
+      {active && assessment.plan && <HealingPanel plan={assessment.plan} className="mt-4" />}
 
       <div className="mt-6 grid gap-4 lg:grid-cols-2">
         <Panel title="Perubahan luka" id="perubahan">
