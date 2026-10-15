@@ -321,7 +321,7 @@ Kontrak API (`POST /wounds` dan `POST /wounds/:id/examinations`, lihat `apps/api
 | Tahap | Isi | Ukuran |
 | --- | --- | --- |
 | M1. Fondasi konten (selesai) | F1, F8, potongan ilustrasi F9, test sumber. `healing.js` dan `colors.js` dibuat di M3 bersama angkanya; tautan "Sumber" di halaman pustaka dibuat di M2 | Sedang |
-| M2. Pustaka | F2, ilustrasi di panduan (F3 bagian kartu dan langkah) | Sedang |
+| M2. Pustaka (selesai) | F2, ilustrasi di panduan (F3 bagian kartu dan langkah). "Pustaka" sementara jadi item ke-5 di navigasi utama sampai diputuskan lewat uji kegunaan; layar rujukan baru menautkan ke bab terkait, ilustrasi dan langkah bab di layar rujukan masuk M4 | Sedang |
 | M3. Pemantauan | F4, F5, F6, migrasi data di `localStorage` dan D1, perubahan `apps/api` (Lampiran C) | Besar |
 | M4. Luka bakar dan rujukan | Penilaian luka bakar dan pertanyaan kedalaman (F3), `EscalationView` bergambar | Sedang |
 | M5. Tinjauan dan rilis | F10, uji kegunaan 5–8 peserta berkulit sawo matang, perbaikan, rilis staging lalu production. Rilis production dengan akun butuh API yang sudah di-deploy dan penyedia email | Sedang |

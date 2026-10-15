@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { LuArrowLeft, LuX, LuCheck, LuPhone, LuCircleHelp } from "react-icons/lu";
+import { LuArrowLeft, LuX, LuCheck, LuPhone, LuCircleHelp, LuBookOpen } from "react-icons/lu";
 import { Link, useRouter } from "../lib/router";
 import { cx } from "../lib/cx";
 import { Button, ChoiceGroup, Toggle, Banner, Field, Badge, MissingHint, Sheet } from "../components/ui";
@@ -13,11 +13,12 @@ import { Disclaimer } from "../components/AppShell";
 import { ReviewRibbon, SourcesButton } from "../components/ContentMeta";
 import { CaseStories } from "../components/CaseStories";
 import { ContactProfile } from "../components/ContactProfile";
-import { RED_FLAGS, RED_FLAG_BY_ID } from "../content";
+import { CHAPTER_FOR_GUIDE, RED_FLAGS, RED_FLAG_BY_ID, chapterFigure } from "../content";
 import { WOUND_GUIDES, WOUND_TYPE_LIST, assessDetails } from "../content";
 import { AREA_OPTIONS, CONDITION_OPTIONS, SIZE_OPTIONS, WHO_OPTIONS, labelOf } from "../content";
 import { CATEGORY_BY_ID, productsFor } from "../data/products";
 import { useAuth, useToast, useWounds } from "../store/AppProviders";
+import { assetUrl } from "../config/env";
 
 const STEPS = [
   { id: "cek", label: "Tanda bahaya" },
@@ -117,7 +118,15 @@ function TypePicker({ value, onPick }) {
                 selected ? "border-pine" : "border-transparent ring-1 ring-line hover:ring-muted"
               )}
             >
-              <WoundArt type={g.id} size={64} className="shrink-0" />
+              <img
+                src={assetUrl(`illustrations/kecil/${CHAPTER_FOR_GUIDE[g.id].illustration}.webp`)}
+                alt=""
+                width="640"
+                height="429"
+                loading="lazy"
+                decoding="async"
+                className="h-16 w-24 shrink-0 rounded-xl border border-line object-cover sm:h-auto sm:w-full"
+              />
               <span>
                 <span className="block text-[17px] font-extrabold">{g.name}</span>
                 <span className="mt-0.5 block text-sm text-muted">{g.examples}</span>
@@ -135,11 +144,47 @@ function TypePicker({ value, onPick }) {
           </Link>
         </p>
       </div>
+      <div className="mt-3 flex gap-3 rounded-2xl bg-sunken p-4 text-[15px]">
+        <LuBookOpen size={20} className="mt-0.5 shrink-0 text-muted" aria-hidden="true" />
+        <p className="text-ink-soft">
+          Belum yakin jenisnya? Bandingkan bentuk dan kedalamannya di{" "}
+          <Link to="/pustaka" className="font-semibold text-pine underline underline-offset-2">
+            pustaka luka
+          </Link>
+          .
+        </p>
+      </div>
     </>
   );
 }
 
 /* ---------- Langkah 4: perawatan ---------- */
+// Penampang kulit dari bab pustaka, di atas daftar langkah (PRD tahap 2, F3).
+function CareFigure({ type }) {
+  const chapter = CHAPTER_FOR_GUIDE[type];
+  if (!chapter) return null;
+  const fig = chapterFigure(chapter);
+  return (
+    <figure className="mb-6">
+      <img
+        src={assetUrl(`illustrations/potongan/${chapter.illustration}-penampang.webp`)}
+        alt={fig.altSection}
+        width="760"
+        height="650"
+        loading="lazy"
+        decoding="async"
+        className="mx-auto w-full max-w-sm rounded-2xl border border-line bg-canvas"
+      />
+      <figcaption className="mt-2 text-center text-[13px] text-muted">
+        Seberapa dalam luka ini.{" "}
+        <Link to={`/pustaka/${chapter.slug}`} className="font-semibold text-pine">
+          Baca Bab {chapter.number} di pustaka
+        </Link>
+      </figcaption>
+    </figure>
+  );
+}
+
 function CareSteps({ steps, done, onDone, onEscalate }) {
   const activeIndex = steps.findIndex((s) => !done[s.id]);
   return (
@@ -400,6 +445,7 @@ export default function Guide() {
             ))}
           </div>
         )}
+        <CareFigure type={type} />
         <div className="mb-3 flex items-center justify-between gap-3">
           <p className="tabular text-sm font-semibold text-muted" aria-live="polite">
             {doneCount} dari {careSteps.length} langkah selesai

@@ -7,7 +7,7 @@ import { CheckInSheet, PainChart } from "../components/monitor";
 import { PhotoGallery } from "../components/PhotoGallery";
 import { ProductRow, ProductSheet } from "../components/shop";
 import { woundStatus } from "../components/WoundRow";
-import { WOUND_GUIDES, MONITOR_SIGNS } from "../content";
+import { CHAPTER_FOR_GUIDE, WOUND_GUIDES, MONITOR_SIGNS } from "../content";
 import { AREA_OPTIONS, FLUID_OPTIONS, REDNESS_OPTIONS, labelOf } from "../content";
 import { PRODUCTS } from "../data/products";
 import { latestWarnings, checkinWarnings } from "../lib/checkin";
@@ -220,6 +220,11 @@ export default function WoundDetail({ id }) {
               Luka tidak membaik setelah beberapa hari
             </li>
           </ul>
+          {CHAPTER_FOR_GUIDE[wound.type] && (
+            <Link to={`/pustaka/${CHAPTER_FOR_GUIDE[wound.type].slug}`} className="mt-3 inline-flex min-h-11 items-center text-sm font-semibold text-pine">
+              Baca Bab {CHAPTER_FOR_GUIDE[wound.type].number}: {CHAPTER_FOR_GUIDE[wound.type].title.toLowerCase()} di pustaka
+            </Link>
+          )}
         </Panel>
       </div>
 
