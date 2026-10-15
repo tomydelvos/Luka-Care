@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { LuEye, LuEyeOff, LuCheck } from "react-icons/lu";
 import { Link, useRouter } from "../lib/router";
 import { Banner, Button, Field, MissingHint } from "../components/ui";
 import { PlasterGlyph } from "../components/art";
 import { useAuth, useToast } from "../store/AppProviders";
-import { USE_MOCK_API } from "../config/env";
+import { DEMO_ACCOUNT, USE_MOCK_API } from "../config/env";
 import { cx } from "../lib/cx";
 
 function AuthLayout({ title, lead, children, footer }) {
@@ -54,24 +54,125 @@ function Checkbox({ checked, onChange, children }) {
   );
 }
 
-export function LoginForm({ onDone }) {
-  const { login } = useAuth();
-  const [form, setForm] = useState({ email: "", password: "" });
+const secondsUntil = (iso) => (iso ? Math.max(0, Math.ceil((Date.parse(iso) - Date.now()) / 1000)) : 0);
+
+// Langkah kedua daftar/masuk: masukkan kode 6 digit yang dikirim ke email.
+export function VerifyEmailForm({ verification, onDone, onBack }) {
+  const { verify, resend } = useAuth();
+  const [info, setInfo] = useState(verification);
+  const [code, setCode] = useState("");
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
+  const [wait, setWait] = useState(() => secondsUntil(verification.resendAt));
+
+  useEffect(() => {
+    setWait(secondsUntil(info.resendAt));
+    const timer = setInterval(() => setWait(secondsUntil(info.resendAt)), 1000);
+    return () => clearInterval(timer);
+  }, [info.resendAt]);
 
   const submit = async (e) => {
     e.preventDefault();
     setBusy(true);
     setError("");
     try {
-      const user = await login({ email: form.email.trim().toLowerCase(), password: form.password });
-      onDone(user);
+      onDone(await verify({ email: info.email, code }));
     } catch (err) {
       setError(err.message);
       setBusy(false);
     }
   };
+
+  const sendAgain = async () => {
+    setError("");
+    setNotice("");
+    try {
+      const { verification: next } = await resend({ email: info.email });
+      setInfo({ ...info, ...next });
+      setCode("");
+      setNotice("Kode baru sudah dikirim. Kode sebelumnya tidak berlaku lagi.");
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  return (
+    <form onSubmit={submit} className="space-y-4" noValidate>
+      <p className="text-[15px] text-ink-soft">
+        Kami mengirim kode 6 digit ke <span className="font-semibold text-ink">{info.email}</span>. Kode berlaku 15 menit.
+      </p>
+      {info.devCode && (
+        <Banner tone="info" title={USE_MOCK_API ? "Mode demo" : "Mode lokal"}>
+          Email belum benar-benar dikirim. Kode Anda: <span className="tabular font-bold text-ink">{info.devCode}</span>
+        </Banner>
+      )}
+      <Field
+        label="Kode verifikasi"
+        inputMode="numeric"
+        autoComplete="one-time-code"
+        maxLength={6}
+        value={code}
+        onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+        className="tabular"
+      />
+      {notice && <Banner tone="info">{notice}</Banner>}
+      {error && <Banner tone="alert">{error}</Banner>}
+      <div>
+        <MissingHint items={[code.length < 6 && "6 digit kode verifikasi"]} />
+        <Button type="submit" block size="lg" disabled={busy || code.length < 6}>
+          {busy ? "Memeriksa kode…" : "Verifikasi email"}
+        </Button>
+      </div>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <Button type="button" variant="ghost" size="sm" onClick={sendAgain} disabled={wait > 0}>
+          {wait > 0 ? <span className="tabular">Kirim ulang dalam {wait} detik</span> : "Kirim ulang kode"}
+        </Button>
+        {onBack && (
+          <Button type="button" variant="ghost" size="sm" onClick={onBack}>
+            Ganti email
+          </Button>
+        )}
+      </div>
+    </form>
+  );
+}
+
+export function LoginForm({ onDone }) {
+  const { login } = useAuth();
+  const [form, setForm] = useState({ email: "", password: "" });
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [verification, setVerification] = useState(null);
+
+  const submit = async (e) => {
+    e.preventDefault();
+    setBusy(true);
+    setError("");
+    try {
+      const result = await login({ email: form.email.trim().toLowerCase(), password: form.password });
+      if (result.verification) {
+        setVerification(result.verification);
+        setBusy(false);
+      } else {
+        onDone(result.user);
+      }
+    } catch (err) {
+      setError(err.message);
+      setBusy(false);
+    }
+  };
+
+  if (verification) {
+    return (
+      <>
+        <Banner tone="caution" className="mb-4">
+          Email Anda belum diverifikasi. Masukkan kode yang kami kirim untuk melanjutkan.
+        </Banner>
+        <VerifyEmailForm verification={verification} onDone={onDone} onBack={() => setVerification(null)} />
+      </>
+    );
+  }
 
   return (
     <>
@@ -91,6 +192,17 @@ export function LoginForm({ onDone }) {
           Mode demo: akun tersimpan di browser ini. Daftar dulu, lalu masuk dengan email yang sama.
         </p>
       )}
+      {DEMO_ACCOUNT && (
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-2 rounded-2xl bg-sunken p-3 text-[13px] text-muted">
+          <span>
+            Akun demo lokal: <span className="font-semibold text-ink-soft">{DEMO_ACCOUNT.email}</span> /{" "}
+            <span className="font-semibold text-ink-soft">{DEMO_ACCOUNT.password}</span>
+          </span>
+          <Button type="button" variant="ghost" size="sm" onClick={() => setForm({ ...DEMO_ACCOUNT })}>
+            Isi otomatis
+          </Button>
+        </div>
+      )}
     </>
   );
 }
@@ -101,6 +213,7 @@ export function RegisterForm({ onDone, submitLabel = "Buat akun" }) {
   const [errors, setErrors] = useState({});
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [verification, setVerification] = useState(null);
   const set = (patch) => setForm((f) => ({ ...f, ...patch }));
 
   const submit = async (e) => {
@@ -114,13 +227,21 @@ export function RegisterForm({ onDone, submitLabel = "Buat akun" }) {
     setBusy(true);
     setError("");
     try {
-      const user = await register({ name: form.name.trim(), email: form.email.trim().toLowerCase(), password: form.password, consent: form.consent });
-      onDone(user);
+      const result = await register({ name: form.name.trim(), email: form.email.trim().toLowerCase(), password: form.password, consent: form.consent });
+      if (result.verification) {
+        setVerification(result.verification);
+        setBusy(false);
+      } else {
+        onDone(result.user);
+      }
     } catch (err) {
       setError(err.message);
       setBusy(false);
     }
   };
+
+  // Akun sudah dibuat di server; "Ganti email" tidak dibuka di sini karena email itu sudah terdaftar.
+  if (verification) return <VerifyEmailForm verification={verification} onDone={onDone} />;
 
   return (
     <form onSubmit={submit} className="space-y-4" noValidate>
@@ -191,7 +312,7 @@ export function Register() {
     >
       <RegisterForm
         onDone={() => {
-          toast("Akun dibuat");
+          toast("Email terverifikasi. Akun Anda siap dipakai.");
           navigate("/", { replace: true });
         }}
       />

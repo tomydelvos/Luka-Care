@@ -4,6 +4,8 @@ const env = import.meta.env ?? {};
 export const APP_ENV = env.VITE_APP_ENV || "development";
 export const API_URL = (env.VITE_API_URL || "http://localhost:8787").replace(/\/$/, "");
 export const USE_MOCK_API = String(env.VITE_USE_MOCK_API ?? "true") !== "false";
+// Akun demo dibuat oleh `npm run db:seed:local` di apps/api; hanya ditampilkan saat dev lokal ke API.
+export const DEMO_ACCOUNT = Boolean(env.DEV) && !USE_MOCK_API ? { email: "demo@lukacare.test", password: "lukacare123" } : null;
 export const ROUTER_MODE = ["hash", "memory"].includes(env.VITE_ROUTER_MODE) ? env.VITE_ROUTER_MODE : "history";
 
 export const EMERGENCY_NUMBERS = [

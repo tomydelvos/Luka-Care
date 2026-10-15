@@ -22,6 +22,7 @@ cd apps/api
 npm ci
 cp .dev.vars.example .dev.vars
 npm run db:migrate:local
+npm run db:seed:local    # akun demo: demo@lukacare.test / lukacare123
 npm run dev              # http://localhost:8787
 npm test                 # Vitest di runtime Workers (D1 + R2 lokal)
 ```
@@ -33,6 +34,7 @@ Frontend belum punya linter maupun test; API punya test Vitest. Kalau menambahka
 - Frontend React 19 + Vite 7 + Tailwind CSS v4 di `apps/web`, semua halaman sudah ada (lihat tabel rute di README).
 - Development memakai API lokal (`VITE_USE_MOCK_API=false` di `.env.development`); staging dan production masih mock (`true`) sampai API di-deploy. Di mode mock, luka dan akun disimpan di `localStorage` (prefix `lukacare:`). Keranjang selalu di `localStorage`.
 - Di mode API: sesi yang ditolak server (401) otomatis dihapus dan pengguna diminta masuk lagi (`SESSION_EXPIRED_EVENT` di `services/http.js`); unduh/hapus data memakai `services/accountService.js` (`GET /me/export`, `DELETE /me`); tombol data contoh hanya ada di mode mock.
+- Akun baru wajib verifikasi email dengan kode 6 digit (`POST /auth/verify`, form `VerifyEmailForm` di `pages/Auth.jsx`). Belum ada penyedia email: di dev lokal kode tampil di layar (`DEV_EXPOSE_CODES=true`). Akun demo lokal `demo@lukacare.test` / `lukacare123` dibuat oleh `npm run db:seed:local` (dijalankan otomatis oleh `jalankan-lukacare.command`).
 - Checkout masih demo, tanpa pembayaran sungguhan.
 - Menyimpan luka untuk dipantau butuh akun: di langkah 6 `/panduan`, pengguna yang belum masuk diminta daftar atau masuk lewat `Sheet` (form dari `pages/Auth.jsx`), lalu luka langsung disimpan. Langkah 1–5 tetap tanpa login (aturan produk no. 4).
 - Galeri foto di `/pantau/:id` (`src/components/PhotoGallery.jsx`) dibatasi `MAX_GALLERY_PHOTOS` = 3 per luka, terpisah dari foto catatan harian.
@@ -67,6 +69,7 @@ Frontend belum punya linter maupun test; API punya test Vitest. Kalau menambahka
 - [ ] Tambah ESLint dan beberapa test (Vitest + Testing Library) untuk `assessDetails`, `checkinWarnings`, dan alur panduan
 - [x] `apps/api`: Worker + D1 (`users`, `wounds`, `wound_examinations`, `wound_photos`) + R2
 - [x] Sambungkan frontend ke API (development) dan alur simpan luka tanpa login (minta daftar di langkah 6)
+- [ ] Sambungkan penyedia email untuk kode verifikasi (`deliver()` di `apps/api/src/lib/verification.js`)
 - [ ] Deploy API ke staging/production, lalu set `VITE_USE_MOCK_API=false` di `.env.staging` dan `.env.production`
 - [ ] Ganti katalog contoh dengan data mitra apotek, integrasi pembayaran
 - [ ] Pengingat harian (Web Push) untuk catat kondisi luka

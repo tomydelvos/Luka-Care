@@ -25,13 +25,16 @@ export async function call(path, { method = "GET", body, token, headers = {} } =
 }
 
 let n = 0;
+// Daftar + verifikasi email (kode diambil dari devCode, aktif di test lewat DEV_EXPOSE_CODES).
 export async function registerUser(overrides = {}) {
   n += 1;
   const { json } = await call("/auth/register", {
     method: "POST",
     body: { name: "Rina Pengguna", email: `rina${n}-${Date.now()}@contoh.id`, password: "rahasia123", consent: true, ...overrides },
   });
-  return json.data;
+  const { email, devCode } = json.data.verification;
+  const verified = await call("/auth/verify", { method: "POST", body: { email, code: devCode } });
+  return verified.json.data;
 }
 
 export const WOUND = { title: "Lecet di lutut", type: "lecet", area: "lutut", condition: "kering", size: "kecil", who: "dewasa", diabetes: false };
