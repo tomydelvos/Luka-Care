@@ -40,7 +40,7 @@ Frontend belum punya linter maupun test; API punya test Vitest. Kalau menambahka
 - Galeri foto di `/pantau/:id` (`src/components/PhotoGallery.jsx`) dibatasi `MAX_GALLERY_PHOTOS` = 3 per luka, terpisah dari foto catatan harian.
 - Katalog produk di `src/data/products.js` masih contoh dengan nama generik.
 - Backend `apps/api` (Hono di Cloudflare Worker + D1 + R2) sudah ada dan teruji, tapi belum di-deploy. Kontraknya sama dengan `src/services/woundService.js` dan `authService.js`; ubah keduanya bersamaan. Batas galeri (`MAX_GALLERY_PHOTOS`) didefinisikan di frontend dan di `apps/api/src/routes/wounds.js`.
-- **Tahap 2 sedang direncanakan:** `docs/prd-tahap-2.md`. Isinya memasukkan buku panduan dan hasil riset ke web. Kerjakan berurutan M1 → M5 sesuai PRD.
+- **Tahap 2 sedang direncanakan:** `docs/prd-tahap-2.md` (v1.2). Isinya memasukkan buku panduan dan hasil riset ke web. Kerjakan berurutan M1 → M5 sesuai PRD; perubahan model data dikerjakan di frontend dan `apps/api` bersamaan.
 
 ## Konten dan riset
 

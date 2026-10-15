@@ -1,6 +1,8 @@
 # PRD Tahap 2: konten berbasis riset di web LukaCare
 
-Versi 1.1, 13 Oktober 2026. Pemilik produk: tim LukaCare. Status: draf untuk ditinjau.
+Versi 1.2, 15 Oktober 2026. Pemilik produk: tim LukaCare. Status: draf untuk ditinjau.
+
+Perubahan versi 1.2: menyesuaikan PRD dengan backend `apps/api` yang sudah masuk `main` (bagian "Kondisi teknis saat ini", "Bukan cakupan", F4, F11, Lampiran C, rencana rilis, risiko, dan urutan kerja), dan memulihkan judul F3 yang hilang.
 
 Perubahan versi 1.1: contoh kasus di langkah 3 panduan (F2a) dan profile kontak di langkah 4 (F12) sudah dikerjakan lebih dulu.
 
@@ -24,6 +26,16 @@ Riset tahap ini menemukan tiga hal yang mengubah desain produk:
 2. **Angka waktu pulih paling aman disajikan sebagai batas periksa**, bukan janji tanggal sembuh. Sebagian besar angka untuk dermis berasal dari penelitian luka bakar.
 3. **Kemerahan sering tidak tampak di kulit gelap.** Dalam satu studi, kemerahan hanya tercatat pada 2,3% pasien berkulit paling gelap dibanding 13,4% pada kulit terang. Penilaian infeksi harus memakai rabaan, nyeri, bau, dan perluasan dari garis pulpen.
 
+## Kondisi teknis saat ini
+
+Tahap 2 dibangun di atas kondisi berikut (rincian di `CLAUDE.md` dan `apps/api/README.md`):
+
+- **Backend sudah ada:** `apps/api` (Hono di Cloudflare Worker + D1 + R2) dengan tabel `users`, `sessions`, `email_verifications`, `wounds`, `wound_examinations`, dan `wound_photos`. API teruji (Vitest di runtime Workers), tetapi belum di-deploy.
+- **Dua mode data:** development memakai API lokal (`VITE_USE_MOCK_API=false`). Staging dan production masih mock (`localStorage`) sampai API di-deploy. Setiap perubahan model data harus dikerjakan di keduanya: `src/services/woundService.js` (mock dan HTTP) dan `apps/api`.
+- **Akun:** menyimpan luka untuk dipantau butuh akun. Akun baru wajib verifikasi email dengan kode 6 digit. Penyedia email belum disambungkan, jadi di dev lokal kode tampil di layar. Pertolongan pertama tetap tanpa login.
+- **Foto:** foto luka disimpan di bucket R2 privat lewat URL bertanda tangan. Galeri dibatasi 3 foto per luka.
+- **Data pribadi (UU PDP):** persetujuan eksplisit saat daftar, unduh data (`GET /me/export`), dan hapus akun (`DELETE /me`) sudah tersedia. Kolom data baru di tahap 2 harus ikut terbawa di ekspor dan terhapus saat akun dihapus.
+
 ## Tujuan
 
 | Tujuan | Ukuran | Target awal |
@@ -39,7 +51,7 @@ Target awal adalah hipotesis dan ditinjau ulang setelah 4 minggu data.
 ## Bukan cakupan tahap ini
 
 - Klasifikasi warna atau kedalaman luka dari foto secara otomatis (AI). Risikonya tinggi dan belum ada alat tervalidasi untuk awam.
-- Backend production (Worker, D1, R2). Tahap 2 tetap memakai mock API, tetapi model data harus siap dipindah ke API.
+- Deploy API ke staging dan production, serta penyedia email untuk kode verifikasi. Keduanya pekerjaan terpisah dari tahap 2 (lihat "Langkah berikutnya" di `CLAUDE.md`). Selama belum di-deploy, rilis staging tahap 2 berjalan di mode mock, sedangkan development memakai API lokal.
 - Telekonsultasi dengan tenaga kesehatan.
 - Pembayaran sungguhan di marketplace.
 - Bab rabies yang lengkap dengan jadwal vaksin. Butuh sumber Kemenkes tersendiri (lihat pertanyaan terbuka).
@@ -108,7 +120,9 @@ Langkah 3 panduan ("Detail luka") kini menampilkan bagian "Contoh kasus untuk di
 - Bagian ini ditaruh di bawah formulir dengan catatan "Sedang menangani luka? Lanjutkan dulu ke langkah perawatan", agar tidak menghambat pertolongan pertama.
 - Gambar kecil WebP (4–12 KB) dibuat dengan `npm run thumbs` di `tools/illustrations` dan disimpan di `public/illustrations/kecil/`.
 
-Sisa pekerjaan: pindahkan isi `caseStories.js` ke `src/content/` saat F1, beri `sourceIds` dan status tinjauan per kasus, dan masukkan ke daftar tinjauan F10. Panduan yang memakai kedalaman dan ilustrasi (Wajib)
+Sisa pekerjaan: pindahkan isi `caseStories.js` ke `src/content/` saat F1, beri `sourceIds` dan status tinjauan per kasus, dan masukkan ke daftar tinjauan F10.
+
+### F3. Panduan yang memakai kedalaman dan ilustrasi (Wajib)
 
 Perbarui alur `/panduan`:
 
@@ -118,7 +132,7 @@ Perbarui alur `/panduan`:
   - Luka bakar: "Ada lepuh?", "Warna dasarnya?" (merah tanpa lepuh / merah muda pucat basah / merah muda gelap / belang, merah tua bercak, atau pucat / putih seperti lilin / hitam hangus), "Masih terasa nyeri?", dan "Seluas berapa telapak tangan korban (termasuk jari)?". Hasilnya diperkirakan dengan tabel PNPK di Lampiran A.
 - **Langkah perawatan:** sesuaikan teks dan timer dengan buku (air mengalir 20 menit untuk luka bakar, tekan 5–10 menit untuk sayatan). Tampilkan ilustrasi penampang di atas daftar langkah.
 - **Layar rujukan (`EscalationView`):** untuk 6 jenis luka Bagian B, tampilkan ilustrasi dan langkah pertolongan pertama dari bab terkait sambil menuju fasilitas kesehatan.
-- **Simpan untuk dipantau:** simpan lapisan perkiraan (`depthLayer`) dan hasil penilaian luka bakar bersama data luka.
+- **Simpan untuk dipantau:** simpan lapisan perkiraan (`depthLayer`) dan hasil penilaian luka bakar bersama data luka, di mode mock maupun API (`POST /wounds`). Alur daftar, verifikasi email, lalu simpan di langkah 6 tetap seperti sekarang.
 
 Kriteria penerimaan:
 
@@ -142,13 +156,17 @@ Ganti formulir "Catat kondisi hari ini" (`CheckInSheet` di `src/components/monit
 | Demam (≥ 37,7 °C) atau badan sangat lemas | Ya / tidak | |
 | Penutup diganti | Ya / tidak | Tetap |
 
-Migrasi data tahap 1 yang tersimpan di perangkat: `redness: "meluas"` menjadi `spread: "melewati_garis"`; `fluid: "nanah"` menjadi `fluid: "kental_keruh"`; `fluid: "bening"` menjadi `fluid: "bening_tipis"`. Catatan lama tetap terbaca.
+Migrasi data tahap 1: `redness: "meluas"` menjadi `spread: "melewati_garis"`; `fluid: "nanah"` menjadi `fluid: "kental_keruh"`; `fluid: "bening"` menjadi `fluid: "bening_tipis"`. Catatan lama tetap terbaca. Migrasi dijalankan di dua tempat:
+
+- **Perangkat (mode mock):** saat data `localStorage` dibaca.
+- **Server (mode API):** migrasi D1 bernomor baru di `apps/api/migrations/` untuk tabel `wound_examinations`. API tetap menerima catatan versi 1 dari klien lama sampai semua klien memakai versi 2.
 
 Kriteria penerimaan:
 
 - Formulir bisa diisi dalam ≤ 60 detik oleh peserta uji kegunaan.
 - Tidak ada pertanyaan bahaya yang hanya bertumpu pada warna merah.
-- Catatan tahap 1 yang sudah tersimpan tetap tampil benar setelah pembaruan.
+- Catatan tahap 1 yang sudah tersimpan tetap tampil benar setelah pembaruan, baik dari `localStorage` maupun dari API.
+- Test API (`apps/api`, `npm test`) mencakup penyimpanan catatan versi 2, penolakan nilai di luar pilihan, dan pembacaan catatan versi 1.
 
 ### F5. Aturan penilaian versi 2 (Wajib)
 
@@ -215,7 +233,7 @@ Setelah pengguna menekan "Tandai sudah pulih":
 
 ### F11. Pengingat (Bisa)
 
-Pengingat catatan harian, pengingat lihat ulang luka bakar pada hari ke-2–3, dan pengingat batas periksa, lewat Web Push. Di iOS, Web Push hanya bekerja setelah web dipasang sebagai PWA, jadi fitur ini butuh manifest dan service worker.
+Pengingat catatan harian, pengingat lihat ulang luka bakar pada hari ke-2–3, dan pengingat batas periksa, lewat Web Push. Di iOS, Web Push hanya bekerja setelah web dipasang sebagai PWA, jadi fitur ini butuh manifest dan service worker. Pengiriman push juga butuh API yang sudah di-deploy, untuk menyimpan langganan push per akun dan mengirim pengingat terjadwal (Cron Trigger di Worker).
 
 ### F12. Profile kontak di langkah perawatan (sudah dikerjakan)
 
@@ -291,7 +309,12 @@ Sumber per aturan: MedlinePlus, IWII 2022, NHS Forth Valley, NICE NG141, Wounds 
 }
 ```
 
-Kontrak API di README (`POST /wounds/:id/examinations`) ikut memakai bentuk ini. Kolom D1 `wound_examinations` perlu ditambah saat backend dibangun.
+Kontrak API (`POST /wounds` dan `POST /wounds/:id/examinations`, lihat `apps/api/README.md`) ikut memakai bentuk ini. Perubahan yang dibutuhkan di `apps/api`:
+
+- Migrasi D1 baru: kolom tambahan di `wounds` (`depth_layer`, `burn`, `risk`, `healing`, `content_version`) dan `wound_examinations` (`schema`, `bed_colors`, `new_odor`, `skin`, `spread`, `assessment`). Kolom berisi daftar atau objek disimpan sebagai JSON teks.
+- Validasi nilai pilihan di `src/lib/validate.js`, disamakan dengan konstanta di frontend.
+- Pembentukan respons di `src/lib/wounds.js`, termasuk ekspor `GET /me/export`.
+- `assessment` dan `healing` dihitung di klien saat simpan dan disimpan apa adanya. Server tidak menilai ulang, jadi aturan Lampiran B cukup ada di satu tempat (`src/lib/checkin.js`).
 
 ## Rencana rilis
 
@@ -299,9 +322,9 @@ Kontrak API di README (`POST /wounds/:id/examinations`) ikut memakai bentuk ini.
 | --- | --- | --- |
 | M1. Fondasi konten | F1, F8, potongan ilustrasi F9, test sumber | Sedang |
 | M2. Pustaka | F2, ilustrasi di panduan (F3 bagian kartu dan langkah) | Sedang |
-| M3. Pemantauan | F4, F5, F6, migrasi data | Besar |
+| M3. Pemantauan | F4, F5, F6, migrasi data di `localStorage` dan D1, perubahan `apps/api` (Lampiran C) | Besar |
 | M4. Luka bakar dan rujukan | Penilaian luka bakar dan pertanyaan kedalaman (F3), `EscalationView` bergambar | Sedang |
-| M5. Tinjauan dan rilis | F10, uji kegunaan 5–8 peserta berkulit sawo matang, perbaikan, rilis staging lalu production | Sedang |
+| M5. Tinjauan dan rilis | F10, uji kegunaan 5–8 peserta berkulit sawo matang, perbaikan, rilis staging lalu production. Rilis production dengan akun butuh API yang sudah di-deploy dan penyedia email | Sedang |
 | Berikutnya | F7, varian warna kulit (F9), F11 | — |
 
 Uji kegunaan di M5 mencakup soal: membedakan kuning tipis dari nanah, aturan warna terburuk, cara menandai garis pulpen, dan arti batas periksa.
@@ -315,7 +338,8 @@ Uji kegunaan di M5 mencakup soal: membedakan kuning tipis dari nanah, aturan war
 | Infeksi terlewat di kulit gelap | Pertanyaan rabaan dan garis pulpen wajib di formulir; uji kegunaan dengan peserta berkulit sawo matang |
 | Ilustrasi terlalu kecil di ponsel | Potongan per panel dan swatch warna (F9) |
 | Tinjauan klinisi lambat dan menahan rilis | Mulai tinjauan di M1 secara paralel; rilis staging tetap berjalan dengan pita "Belum ditinjau" |
-| Data tahap 1 rusak setelah perubahan skema | Migrasi bernomor versi dan test untuk data contoh tahap 1 |
+| Data tahap 1 rusak setelah perubahan skema | Migrasi bernomor versi di `localStorage` dan D1, dan test untuk data contoh tahap 1 di kedua tempat |
+| Mock dan API tidak sama setelah perubahan model data | Ubah `woundService.js` (mock dan HTTP) dan `apps/api` di PR yang sama; uji alur simpan di kedua mode |
 
 ## Pertanyaan terbuka
 
@@ -324,7 +348,7 @@ Uji kegunaan di M5 mencakup soal: membedakan kuning tipis dari nanah, aturan war
 3. Apakah bab rabies lengkap (jadwal vaksin anti rabies) masuk tahap 2? Perlu sumber Kemenkes khusus.
 4. Pustaka jadi menu tersendiri atau tab di dalam Panduan?
 5. Apakah varian ilustrasi kulit lebih gelap menjadi syarat rilis tahap 2?
-6. Berapa lama foto luka disimpan di perangkat dan nanti di server, sesuai UU PDP?
+6. Berapa lama foto dan catatan luka disimpan di server (R2 dan D1) setelah luka sembuh atau akun tidak aktif, sesuai UU PDP? Hapus akun sudah menghapus semuanya; yang belum ada adalah kebijakan retensi.
 7. Data asli profile kontak: email, nomor WhatsApp, akun Instagram, jam layanan, dan siapa yang membalas pesan.
 
 ## Urutan kerja yang disarankan di Claude Code
@@ -333,3 +357,4 @@ Uji kegunaan di M5 mencakup soal: membedakan kuning tipis dari nanah, aturan war
 2. Mulai dari M1: buat `apps/web/src/content/`, pindahkan konten tahap 1, lalu tambahkan konten buku. Tambahkan ESLint dan Vitest bila belum ada.
 3. Tulis test Lampiran B sebelum mengubah `src/lib/checkin.js`.
 4. Kerjakan M2 sampai M4 secara berurutan; jalankan `npm run build` dan test di akhir setiap tahap.
+5. Setiap perubahan model data (F3, F4, F6) dikerjakan bersamaan di `src/services/woundService.js` dan `apps/api` (migrasi D1, validasi, test). Jalankan `npm test` di `apps/api` dan coba alur simpan lewat `jalankan-lukacare.command` dengan akun demo `demo@lukacare.test`.
