@@ -8,8 +8,10 @@ LukaCare adalah web app pendamping perawatan luka ringan untuk pengguna Indonesi
 cd apps/web
 npm install
 npm run dev              # http://localhost:3001, butuh API lokal di :8787 (lihat di bawah)
-npm run build            # output ke apps/web/dist
-npm run build:staging    # pakai .env.staging
+npm run lint             # ESLint
+npm test                 # Vitest (konten, assessDetails, checkinWarnings)
+npm run build:staging    # pakai .env.staging; output ke apps/web/dist
+npm run build:production # gagal selama konten medis masih draft (gerbang di vite.config.js)
 npm run deploy:staging   # wrangler → staging.lukacare.com
 ```
 
@@ -27,7 +29,7 @@ npm run dev              # http://localhost:8787
 npm test                 # Vitest di runtime Workers (D1 + R2 lokal)
 ```
 
-Frontend belum punya linter maupun test; API punya test Vitest. Kalau menambahkan tooling, tambahkan juga script-nya di `package.json` dan perbarui bagian ini.
+Web dan API sama-sama punya test Vitest; web juga punya ESLint. `npm run build` memakai mode production, jadi ikut tertahan gerbang konten; untuk mengecek build sehari-hari pakai `npm run build:staging`. Kalau menambahkan tooling, tambahkan juga script-nya di `package.json` dan perbarui bagian ini.
 
 ## Status saat ini
 
@@ -40,26 +42,28 @@ Frontend belum punya linter maupun test; API punya test Vitest. Kalau menambahka
 - Galeri foto di `/pantau/:id` (`src/components/PhotoGallery.jsx`) dibatasi `MAX_GALLERY_PHOTOS` = 3 per luka, terpisah dari foto catatan harian.
 - Katalog produk di `src/data/products.js` masih contoh dengan nama generik.
 - Backend `apps/api` (Hono di Cloudflare Worker + D1 + R2) sudah ada dan teruji, tapi belum di-deploy. Kontraknya sama dengan `src/services/woundService.js` dan `authService.js`; ubah keduanya bersamaan. Batas galeri (`MAX_GALLERY_PHOTOS`) didefinisikan di frontend dan di `apps/api/src/routes/wounds.js`.
-- **Tahap 2 sedang direncanakan:** `docs/prd-tahap-2.md` (v1.2). Isinya memasukkan buku panduan dan hasil riset ke web. Kerjakan berurutan M1 → M5 sesuai PRD; perubahan model data dikerjakan di frontend dan `apps/api` bersamaan.
+- **Tahap 2 berjalan:** `docs/prd-tahap-2.md` (v1.2). Isinya memasukkan buku panduan dan hasil riset ke web. M1 (fondasi konten) selesai; berikutnya M2 (pustaka luka). Kerjakan berurutan sampai M5; perubahan model data dikerjakan di frontend dan `apps/api` bersamaan.
 
 ## Konten dan riset
 
 - `docs/buku-panduan/buku-panduan-perawatan-luka-luar.md`: buku panduan 10 jenis luka (Bagian A rawat di rumah, Bagian B perlu tenaga kesehatan, Bagian C warna luka dan waktu pulih), tabel tanda bahaya, kotak P3K, dan sumber. Ini salinan dari doc Claude tempat klinisi memberi komentar.
 - `docs/riset/waktu-penyembuhan-luka-berdasarkan-warna.md`: laporan riset lengkap; `docs/riset/catatan/` berisi catatan mentah per topik. Bagian "Sumber berselisih" dan "Celah bukti" wajib dibaca sebelum menulis angka apa pun.
-- `apps/web/public/illustrations/`: 16 ilustrasi PNG (2x) dan `kecil/` (WebP tampak atas untuk kartu). Kodenya di `tools/illustrations/` (lihat README di sana; `npm run thumbs` untuk WebP). Ubah gambar lewat kode, jangan edit PNG langsung.
-- `src/data/caseStories.js`: 10 contoh kasus dari buku, tampil di langkah 3 panduan lewat `CaseStories`. Konten medis, ikut aturan tinjauan klinisi. Jika buku berubah, ubah juga file ini.
+- `apps/web/public/illustrations/`: 16 ilustrasi PNG (2x); `kecil/` (WebP tampak atas untuk kartu), `potongan/` (panel tampak atas dan penampang tiap luka untuk ponsel), `warna/` (swatch warna dasar luka dan tanda bahaya untuk catatan harian v2). Kodenya di `tools/illustrations/` (lihat README di sana; `npm run thumbs` dan `npm run crops` untuk WebP). Ubah gambar lewat kode, jangan edit PNG langsung.
+- `src/content/`: semua konten medis (PRD F1). Satu file per jenis luka di `wounds/`, plus `redFlags.js`, `assessment.js` (aturan `assessDetails`), `checkin.js`, `caseStories.js` (10 contoh kasus dari buku), `options.js`, dan `sources.js` (33 rujukan buku). Setiap blok dibungkus `block(fields, { sources, evidence })` dari `meta.js` dan berstatus `draft` sampai ditinjau. Komponen mengimpor dari `src/content` (index), tidak ada teks medis di komponen. Jika buku berubah, ubah juga file di sini.
+- Status tinjauan: isi `review: { status: "reviewed", reviewedBy, reviewedAt }` per blok setelah klinisi menyetujui; label `I` juga butuh `inferenceApproved: true`. `src/content/review.js` mengumpulkan semua blok untuk test dan gerbang build. Di staging (atau `VITE_SHOW_REVIEW=true`) blok draft diberi pita "Belum ditinjau klinisi" (`components/ContentMeta.jsx`), dan tombol "Sumber" membuka rujukan per bagian; daftar lengkap di `/sumber`.
+- `src/data/`: hanya data non-medis (`products.js`, `contact.js`).
 - `src/data/contact.js`: profile kontak di footer langkah 4 (`ContactProfile`). Nilainya masih contoh; isi data asli sebelum rilis dan jangan tampilkan nomor yang belum aktif.
 - Temuan riset yang mengikat desain: warna dasar luka = tahap, lapisan kulit = lama pulih; tidak ada angka hari per warna; waktu ditampilkan sebagai batas periksa; kemerahan tidak boleh jadi satu-satunya tanda bahaya karena sering tidak terlihat di kulit sawo matang.
 
 ## Aturan produk (jangan dilanggar tanpa diskusi)
 
 1. **Tanda bahaya selalu di awal panduan.** Langkah pertama `/panduan` adalah checklist `RED_FLAGS`. Jika ada yang dipilih, panduan dan rekomendasi produk berhenti dan diganti `EscalationView` (119 / faskes).
-2. **Panduan perawatan dan produk dipisah.** Langkah perawatan di `woundGuides.js` tidak boleh menyebut merek atau mengarahkan ke produk tertentu. Produk muncul sesudahnya sebagai kategori pendukung.
+2. **Panduan perawatan dan produk dipisah.** Langkah perawatan di `src/content/wounds/` tidak boleh menyebut merek atau mengarahkan ke produk tertentu. Produk muncul sesudahnya sebagai kategori pendukung.
 3. **Bukan diagnosis.** Jangan menulis kalimat seperti "luka Anda adalah X" atau "gunakan obat Y". Pakai "berdasarkan informasi yang Anda masukkan…". Catatan harian hanya dicocokkan dengan tanda bahaya umum (`src/lib/checkin.js`).
 4. **Pertolongan pertama tanpa login.** Akun hanya untuk menyimpan riwayat ke server.
 5. **Marketplace hanya alat kesehatan dan perlengkapan perawatan**, bukan obat resep.
 6. **Data kesehatan = data pribadi spesifik (UU PDP).** Pertahankan persetujuan eksplisit saat daftar, fitur unduh data, dan hapus data. Foto luka nanti di R2 privat dengan presigned URL.
-7. **Konten medis** (`src/data/woundGuides.js`, `src/data/redFlags.js`) wajib ditinjau dokter atau perawat sebelum production. Ubah isinya dengan hati-hati dan tandai di PR.
+7. **Konten medis** (semua file di `src/content/`) wajib ditinjau dokter atau perawat sebelum production. Ubah isinya dengan hati-hati dan tandai di PR.
 
 ## Arsitektur dan konvensi kode
 
@@ -77,7 +81,9 @@ Frontend belum punya linter maupun test; API punya test Vitest. Kalau menambahka
 
 - [ ] Tahap 2 sesuai `docs/prd-tahap-2.md` (konten terstruktur, pustaka luka, catatan harian v2, batas periksa)
 - [ ] Review konten medis oleh tenaga kesehatan (daftar tinjauan ada di PRD tahap 2, F10)
-- [ ] Tambah ESLint dan beberapa test (Vitest + Testing Library) untuk `assessDetails`, `checkinWarnings`, dan alur panduan
+- [x] Tahap 2 M1: konten di `src/content/` dengan sumber dan status tinjauan, halaman `/sumber`, gerbang build production, potongan ilustrasi
+- [x] ESLint dan test Vitest untuk konten, `assessDetails`, dan `checkinWarnings`
+- [ ] Test alur panduan dengan Testing Library
 - [x] `apps/api`: Worker + D1 (`users`, `wounds`, `wound_examinations`, `wound_photos`) + R2
 - [x] Sambungkan frontend ke API (development) dan alur simpan luka tanpa login (minta daftar di langkah 6)
 - [ ] Sambungkan penyedia email untuk kode verifikasi (`deliver()` di `apps/api/src/lib/verification.js`)

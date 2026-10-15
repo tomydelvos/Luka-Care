@@ -15,7 +15,9 @@
  * - care      : "rumah" (umumnya bisa dirawat di rumah) atau "nakes" (perlu tenaga kesehatan).
  * - timeline  : urut waktu. kind menentukan warna dan ikon:
  *               kejadian | aksi | pantau | faskes | waspada | bahaya | pulih
+ * - sourceIds, evidence, review: metadata blok (lihat meta.js), diambil dari bab buku lewat CHAPTER_META.
  */
+import { block } from "./meta";
 
 export const CASE_GROUPS = [
   { id: "lecet", label: "Lecet" },
@@ -30,7 +32,7 @@ export const CARE_LEVELS = {
   nakes: { label: "Perlu tenaga kesehatan", tone: "caution" },
 };
 
-export const CASE_STORIES = [
+const STORIES = [
   {
     id: "rizki-lecet",
     chapter: 1,
@@ -284,6 +286,22 @@ export const CASE_STORIES = [
     ],
   },
 ];
+
+// Rujukan per bab buku panduan (dari bagian "Sumber" di buku).
+const CHAPTER_META = {
+  1: { sources: ["nhs-cuts", "mayo-cuts", "healthlinkbc-scrape"], evidence: "A" },
+  2: { sources: ["nhs-cuts", "mayo-cuts", "healthdirect-wounds"], evidence: "A" },
+  3: { sources: ["nhs-burns", "griffin-2020", "pnpk-burns", "chop-burn2"], evidence: "B" },
+  4: { sources: ["nhs-blisters", "harvard-blisters"], evidence: "A" },
+  5: { sources: ["healthdirect-wounds", "aafp-laceration-2008"], evidence: "A" },
+  6: { sources: ["mayo-cuts", "healthdirect-wounds"], evidence: "A" },
+  7: { sources: ["nhs-cuts"], evidence: "A" },
+  8: { sources: ["kemenkes-rabies", "who-rabies"], evidence: "A" },
+  9: { sources: ["nhs-burns", "pnpk-burns", "aafp-burns-2020"], evidence: "B" },
+  10: { sources: ["kemenkes-infeksi", "iwii-2022", "nice-ng141"], evidence: "A" },
+};
+
+export const CASE_STORIES = STORIES.map((story) => block(story, CHAPTER_META[story.chapter]));
 
 export const CASE_BY_ID = Object.fromEntries(CASE_STORIES.map((c) => [c.id, c]));
 

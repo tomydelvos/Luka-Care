@@ -7,8 +7,8 @@ import { CheckInSheet, PainChart } from "../components/monitor";
 import { PhotoGallery } from "../components/PhotoGallery";
 import { ProductRow, ProductSheet } from "../components/shop";
 import { woundStatus } from "../components/WoundRow";
-import { WOUND_GUIDES, MONITOR_SIGNS } from "../data/woundGuides";
-import { AREA_OPTIONS, FLUID_OPTIONS, REDNESS_OPTIONS, labelOf } from "../data/options";
+import { WOUND_GUIDES, MONITOR_SIGNS } from "../content";
+import { AREA_OPTIONS, FLUID_OPTIONS, REDNESS_OPTIONS, labelOf } from "../content";
 import { PRODUCTS } from "../data/products";
 import { latestWarnings, checkinWarnings } from "../lib/checkin";
 import { dayNumber, formatDate, formatShortDate, formatTime, isToday, relativeDay } from "../lib/format";
@@ -209,7 +209,7 @@ export default function WoundDetail({ id }) {
         </Panel>
         <Panel title="Periksakan jika muncul" id="tanda">
           <ul className="space-y-2">
-            {MONITOR_SIGNS.map((s) => (
+            {MONITOR_SIGNS.items.map((s) => (
               <li key={s} className="flex gap-3 text-[15px] text-ink-soft">
                 <span className="mt-2 h-2 w-2 shrink-0 rounded-full bg-alert" aria-hidden="true" />
                 {s}

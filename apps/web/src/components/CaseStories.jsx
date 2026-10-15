@@ -16,7 +16,8 @@ import {
 import { cx } from "../lib/cx";
 import { assetUrl } from "../config/env";
 import { Badge, Button, Sheet } from "./ui";
-import { CARE_LEVELS, CASE_GROUPS, CASE_STORIES, casesFor } from "../data/caseStories";
+import { CARE_LEVELS, CASE_GROUPS, CASE_STORIES, casesFor } from "../content";
+import { ReviewRibbon, SourcesButton } from "./ContentMeta";
 
 /* Gaya per jenis peristiwa di linimasa. Merah hanya untuk tanda bahaya. */
 const KIND = {
@@ -162,6 +163,10 @@ function CaseDetail({ story }) {
         Kisah ilustrasi dari Bab {story.chapter} Buku Panduan LukaCare, bukan pasien nyata. Setiap luka bisa berbeda. Jika ragu,
         periksakan ke puskesmas, klinik, atau IGD.
       </p>
+      <div className="mt-2 flex flex-wrap items-center gap-2">
+        <SourcesButton blocks={story} title={`Sumber Bab ${story.chapter}`} className="-ml-3.5" />
+        <ReviewRibbon blocks={story} />
+      </div>
     </div>
   );
 }

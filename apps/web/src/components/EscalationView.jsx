@@ -1,8 +1,9 @@
 import { LuPhone, LuMapPin, LuArrowLeft } from "react-icons/lu";
 import { Button } from "./ui";
-import { LEVEL_COPY } from "../data/redFlags";
+import { LEVEL_COPY } from "../content";
 import { EMERGENCY_NUMBERS, NEAREST_FACILITY_URL } from "../config/env";
 import { cx } from "../lib/cx";
+import { ReviewRibbon, SourcesButton } from "./ContentMeta";
 
 export function EscalationView({ reasons, onBack, backLabel = "Kembali" }) {
   const level = reasons.some((r) => r.level === "darurat") ? "darurat" : "segera";
@@ -56,13 +57,18 @@ export function EscalationView({ reasons, onBack, backLabel = "Kembali" }) {
       </section>
 
       <section className="mt-6" aria-labelledby="sambil-menunggu">
-        <h2 id="sambil-menunggu" className="text-lg font-extrabold">
-          {urgent ? "Sambil menunggu bantuan" : "Sebelum berangkat"}
-        </h2>
+        <div className="flex items-center justify-between gap-3">
+          <h2 id="sambil-menunggu" className="text-lg font-extrabold">
+            {urgent ? "Sambil menunggu bantuan" : "Sebelum berangkat"}
+          </h2>
+          <SourcesButton blocks={[copy, ...reasons]} title="Sumber langkah ini" />
+        </div>
         <div className="mt-3 divide-y divide-line rounded-[1.5rem] border border-line bg-surface">
           {reasons.map((reason) => (
             <div key={reason.id} className="p-5">
-              <p className="font-bold">{reason.title}</p>
+              <p className="flex flex-wrap items-center gap-2 font-bold">
+                {reason.title} <ReviewRibbon blocks={reason} />
+              </p>
               <p className="mt-0.5 text-sm text-muted">{reason.detail}</p>
               <ol className="mt-3 space-y-2">
                 {reason.whileWaiting.map((step, i) => (

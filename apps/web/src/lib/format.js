@@ -4,7 +4,7 @@ const rupiah = new Intl.NumberFormat("id-ID", {
   maximumFractionDigits: 0,
 });
 
-export const formatRupiah = (n) => rupiah.format(n).replace(/ /g, " ");
+export const formatRupiah = (n) => rupiah.format(n).replace(/\u00a0/g, " ");
 
 const dateFmt = new Intl.DateTimeFormat("id-ID", { day: "numeric", month: "short", year: "numeric" });
 const shortFmt = new Intl.DateTimeFormat("id-ID", { day: "numeric", month: "short" });

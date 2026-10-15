@@ -10,11 +10,12 @@ import { EscalationView } from "../components/EscalationView";
 import { ProductRow, ProductSheet } from "../components/shop";
 import { PhotoPicker, PainScale } from "../components/monitor";
 import { Disclaimer } from "../components/AppShell";
+import { ReviewRibbon, SourcesButton } from "../components/ContentMeta";
 import { CaseStories } from "../components/CaseStories";
 import { ContactProfile } from "../components/ContactProfile";
-import { RED_FLAGS, RED_FLAG_BY_ID } from "../data/redFlags";
-import { WOUND_GUIDES, WOUND_TYPE_LIST, assessDetails } from "../data/woundGuides";
-import { AREA_OPTIONS, CONDITION_OPTIONS, SIZE_OPTIONS, WHO_OPTIONS, labelOf } from "../data/options";
+import { RED_FLAGS, RED_FLAG_BY_ID } from "../content";
+import { WOUND_GUIDES, WOUND_TYPE_LIST, assessDetails } from "../content";
+import { AREA_OPTIONS, CONDITION_OPTIONS, SIZE_OPTIONS, WHO_OPTIONS, labelOf } from "../content";
 import { CATEGORY_BY_ID, productsFor } from "../data/products";
 import { useAuth, useToast, useWounds } from "../store/AppProviders";
 
@@ -170,6 +171,7 @@ function CareSteps({ steps, done, onDone, onEscalate }) {
                 <div className="flex flex-wrap items-center gap-2">
                   <h3 className={cx("text-[17px] font-extrabold", isDone && "text-ink-soft")}>{s.title}</h3>
                   {s.optional && <Badge>Opsional</Badge>}
+                  <ReviewRibbon blocks={s} />
                   {isDone && <span className="sr-only">(selesai)</span>}
                 </div>
                 <p className={cx("mt-1 text-[15px]", isDone ? "text-muted" : "text-ink-soft")}>{s.body}</p>
@@ -392,15 +394,18 @@ export default function Guide() {
         {assessment.cautions.length > 0 && (
           <div className="mb-5 space-y-2.5">
             {assessment.cautions.map((c) => (
-              <Banner key={c} tone="caution">
-                {c}
+              <Banner key={c.id} tone="caution">
+                {c.text} <ReviewRibbon blocks={c} />
               </Banner>
             ))}
           </div>
         )}
-        <p className="tabular mb-3 text-sm font-semibold text-muted" aria-live="polite">
-          {doneCount} dari {careSteps.length} langkah selesai
-        </p>
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <p className="tabular text-sm font-semibold text-muted" aria-live="polite">
+            {doneCount} dari {careSteps.length} langkah selesai
+          </p>
+          <SourcesButton blocks={[...careSteps, guide.avoid, ...assessment.cautions]} title={`Sumber perawatan ${guide.name.toLowerCase()}`} />
+        </div>
         <CareSteps
           steps={careSteps}
           done={done}
@@ -408,11 +413,11 @@ export default function Guide() {
           onEscalate={(flagId) => setEscalation({ reasons: [RED_FLAG_BY_ID[flagId]], back: "Kembali ke langkah perawatan" })}
         />
         <section className="mt-8" aria-labelledby="hindari">
-          <h2 id="hindari" className="text-lg font-extrabold">
-            Yang sebaiknya dihindari
+          <h2 id="hindari" className="flex flex-wrap items-center gap-2 text-lg font-extrabold">
+            Yang sebaiknya dihindari <ReviewRibbon blocks={guide.avoid} />
           </h2>
           <ul className="mt-3 space-y-2">
-            {guide.avoid.map((a) => (
+            {guide.avoid.items.map((a) => (
               <li key={a} className="flex gap-3 text-[15px] text-ink-soft">
                 <LuX size={18} className="mt-0.5 shrink-0 text-alert" aria-hidden="true" />
                 {a}
