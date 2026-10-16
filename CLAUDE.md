@@ -9,7 +9,8 @@ cd apps/web
 npm install
 npm run dev              # http://localhost:3001, butuh API lokal di :8787 (lihat di bawah)
 npm run lint             # ESLint
-npm test                 # Vitest (konten, assessDetails, assessCheckin, healingPlan)
+npm test                 # Vitest (konten, assessDetails, assessCheckin, healingPlan, daftar tinjauan)
+npm run review:list      # tulis ulang docs/tinjauan-klinisi.md dari src/content (wajib setelah mengubah konten medis)
 npm run build:staging    # pakai .env.staging; output ke apps/web/dist
 npm run build:production # gagal selama konten medis masih draft (gerbang di vite.config.js)
 npm run deploy:staging   # wrangler → staging.lukacare.com
@@ -51,6 +52,7 @@ Web dan API sama-sama punya test Vitest; web juga punya ESLint. `npm run build` 
 - `apps/web/public/illustrations/`: 16 ilustrasi PNG (2x); `kecil/` (WebP tampak atas untuk kartu), `potongan/` (panel tampak atas dan penampang tiap luka untuk ponsel), `warna/` (swatch warna dasar luka dan tanda bahaya untuk catatan harian v2). Kodenya di `tools/illustrations/` (lihat README di sana; `npm run thumbs` dan `npm run crops` untuk WebP). Ubah gambar lewat kode, jangan edit PNG langsung.
 - `src/content/`: semua konten medis (PRD F1). Satu file per jenis luka di `wounds/`, plus `redFlags.js`, `assessment.js` (aturan `assessDetails`), `caseStories.js` (10 contoh kasus dari buku), `depth.js` (pertanyaan kedalaman dan luka bakar, `estimateBurn`, `depthLayerFor`), `library.js` (isi Bab 1–10 dan Bagian C untuk `/pustaka`, disalin kata per kata dari buku; per bab berupa `nodes` berurutan yang dirender `components/LibraryNodes.jsx`), `chapterMeta.js` (sumber per bab), `checkin.js` (pilihan catatan harian v2, alasan Lampiran B, arti level), `healing.js` (Lampiran A, batas 4 minggu, kelompok berisiko, fase penyembuhan), `options.js`, dan `sources.js` (rujukan buku dan riset). Setiap blok dibungkus `block(fields, { sources, evidence })` dari `meta.js` dan berstatus `draft` sampai ditinjau. Komponen mengimpor dari `src/content` (index), tidak ada teks medis di komponen. Jika buku berubah, ubah juga file di sini.
 - Aturan pemantauan: `src/lib/checkin.js` (`normalizeCheckin` membaca catatan tahap 1 sebagai versi 2, `assessCheckin`, `assessWound` dengan aturan waktu) dan `src/lib/healing.js` (`healingPlan`, `healingSnapshot`). Fungsi murni dengan test untuk setiap baris Lampiran B. Luka baru menyimpan `risk`, `healing`, `contentVersion`, `depthLayer`, dan `burn` (perkiraan derajat dari `estimateBurn`); catatan baru membawa `schema: 2` dan `assessment`. Foto hanya alat bantu pengguna (dibandingkan dengan foto sebelumnya dan gambar contoh di `CheckInSheet`); aplikasi tidak menganalisis foto secara otomatis (di luar cakupan PRD tahap 2).
+- Daftar tinjauan klinisi `docs/tinjauan-klinisi.md` dibuat dari `src/content/reviewList.js`; setelah mengubah konten medis jalankan `npm run review:list` (test `reviewList.test.js` gagal bila belum).
 - Status tinjauan: isi `review: { status: "reviewed", reviewedBy, reviewedAt }` per blok setelah klinisi menyetujui; label `I` juga butuh `inferenceApproved: true`. `src/content/review.js` mengumpulkan semua blok untuk test dan gerbang build. Di staging (atau `VITE_SHOW_REVIEW=true`) blok draft diberi pita "Belum ditinjau klinisi" (`components/ContentMeta.jsx`), dan tombol "Sumber" membuka rujukan per bagian; daftar lengkap di `/sumber`.
 - `src/data/`: hanya data non-medis (`products.js`, `contact.js`).
 - `src/data/contact.js`: profile kontak di footer langkah 4 (`ContactProfile`). Nilainya masih contoh; isi data asli sebelum rilis dan jangan tampilkan nomor yang belum aktif.
@@ -81,7 +83,8 @@ Web dan API sama-sama punya test Vitest; web juga punya ESLint. `npm run build` 
 ## Langkah berikutnya
 
 - [ ] Tahap 2 sesuai `docs/prd-tahap-2.md` (konten terstruktur, pustaka luka, catatan harian v2, batas periksa)
-- [ ] Review konten medis oleh tenaga kesehatan (daftar tinjauan ada di PRD tahap 2, F10)
+- [ ] Review konten medis oleh tenaga kesehatan (daftar tinjauan: `docs/tinjauan-klinisi.md`, PRD tahap 2 F10)
+- [ ] Uji kegunaan 5–8 peserta berkulit sawo matang (`docs/uji-kegunaan.md`), hasil di `docs/hasil-uji-kegunaan.md`
 - [x] Tahap 2 M1: konten di `src/content/` dengan sumber dan status tinjauan, halaman `/sumber`, gerbang build production, potongan ilustrasi
 - [x] Tahap 2 M2: pustaka `/pustaka` (10 bab + Bagian C), "Pustaka" di navigasi utama, kartu jenis luka bergambar dan penampang kulit di langkah perawatan, tautan bab dari beranda, panduan, layar rujukan, dan detail luka
 - [x] Tahap 2 M3: catatan harian v2, `assessCheckin` 4 level, perkiraan pulih dan batas periksa, migrasi D1 `0003`, catatan tahap 1 tetap terbaca

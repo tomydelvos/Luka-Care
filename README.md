@@ -62,7 +62,8 @@ cd apps/web
 npm install
 npm run dev                      # http://localhost:3001
 npm run lint                     # ESLint
-npm test                         # Vitest: konten, aturan penilaian, catatan harian
+npm test                         # Vitest: konten, aturan penilaian, catatan harian, daftar tinjauan
+npm run review:list              # tulis ulang docs/tinjauan-klinisi.md setelah mengubah konten medis
 ```
 
 Data lokal (akun, luka, foto) tersimpan di `apps/api/.wrangler/`.

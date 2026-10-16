@@ -30,10 +30,15 @@ const CONTENT = {
 };
 
 // Daftar { path, block } untuk setiap blok. Blok di dalam blok tidak dicari lagi.
-export function collectBlocks(node = CONTENT, path = "content") {
-  if (isBlock(node)) return [{ path: node.id ? `${path} (${node.id})` : path, block: node }];
+// Blok yang sama yang diekspor dua kali (misalnya BURN_QUESTIONS.baseColor) hanya dihitung sekali.
+export function collectBlocks(node = CONTENT, path = "content", seen = new Set()) {
+  if (isBlock(node)) {
+    if (seen.has(node)) return [];
+    seen.add(node);
+    return [{ path: node.id ? `${path} (${node.id})` : path, block: node }];
+  }
   if (!node || typeof node !== "object") return [];
-  return Object.entries(node).flatMap(([key, value]) => collectBlocks(value, `${path}.${key}`));
+  return Object.entries(node).flatMap(([key, value]) => collectBlocks(value, `${path}.${key}`, seen));
 }
 
 const EVIDENCE_LABELS = ["A", "B", "K", "F", "I"];

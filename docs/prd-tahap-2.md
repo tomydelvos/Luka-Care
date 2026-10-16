@@ -229,6 +229,7 @@ Setelah pengguna menekan "Tandai sudah pulih":
   - ambang luka bakar untuk awam (PNPK memakai ambang rumah sakit);
   - kronologi dan "Yang bisa dipelajari" pada 10 contoh kasus (F2a).
 - Status tinjauan disimpan per blok konten (F1). Perubahan konten setelah tinjauan mengembalikan status ke `draft`.
+- Daftar tinjauan lengkap: `docs/tinjauan-klinisi.md`, dibuat dari konten dengan `npm run review:list` (test gagal bila daftar tidak sama dengan konten). Skenario uji kegunaan M5: `docs/uji-kegunaan.md`.
 - Doc "Buku Panduan Perawatan Luka Luar" di Claude tetap menjadi tempat komentar klinisi sampai konten pindah ke repo; setelah itu repo menjadi sumber utama dan doc diperbarui dari repo.
 
 ### F11. Pengingat (Bisa)
