@@ -16,7 +16,9 @@ describe("baris Lampiran A", () => {
     const row = healingRowFor({ ...base, type: "bakar" });
     expect(row.id).toBe("bakar-belum-diketahui");
     expect(row.checkByDays).toBe(10);
-    expect(healingRowFor({ ...base, type: "bakar", burn: { degree: 2 } }).checkByDays).toBe(14);
+    expect(healingRowFor({ ...base, type: "bakar", burn: { degree: "d2s" } }).checkByDays).toBe(14);
+    expect(healingRowFor({ ...base, type: "bakar", burn: { degree: "d1" } }).checkByDays).toBe(10);
+    expect(healingRowFor({ ...base, type: "bakar", burn: { degree: null } }).id).toBe("bakar-belum-diketahui");
   });
 
   it("baris yang tersimpan di luka dipakai lebih dulu", () => {

@@ -14,6 +14,7 @@ import { ReviewRibbon, SourcesButton } from "../components/ContentMeta";
 import { CaseStories } from "../components/CaseStories";
 import { ContactProfile } from "../components/ContactProfile";
 import { CHAPTER_FOR_GUIDE, RED_FLAGS, RED_FLAG_BY_ID, RISK_GROUP, chapterFigure } from "../content";
+import { BURN_PALMS_BY_ID, BURN_QUESTIONS, DEPTH_QUESTION, depthLayerFor, estimateBurn } from "../content";
 import { CONTENT_VERSION, healingSnapshot } from "../lib/healing";
 import { WOUND_GUIDES, WOUND_TYPE_LIST, assessDetails } from "../content";
 import { AREA_OPTIONS, CONDITION_OPTIONS, SIZE_OPTIONS, WHO_OPTIONS, labelOf } from "../content";
@@ -159,6 +160,73 @@ function TypePicker({ value, onPick }) {
   );
 }
 
+/* ---------- Langkah 3: pertanyaan kedalaman (M4) ---------- */
+const EMPTY_BURN = { blister: null, baseColor: "", painful: null, palms: "" };
+const yesNo = (v) => (v === null || v === undefined ? "" : v ? "ya" : "tidak");
+
+function ExampleImage({ image, className }) {
+  return (
+    <img
+      src={assetUrl(image.src)}
+      alt={image.alt}
+      loading="lazy"
+      decoding="async"
+      className={cx("w-full rounded-2xl border border-line bg-canvas", className)}
+    />
+  );
+}
+
+function Question({ q, value, onChange, columns, children }) {
+  return (
+    <ChoiceGroup
+      label={
+        <span className="inline-flex flex-wrap items-center gap-2">
+          {q.question} <ReviewRibbon blocks={q} />
+        </span>
+      }
+      hint={q.hint}
+      options={q.options}
+      value={value}
+      onChange={onChange}
+      columns={columns}
+    >
+      {children}
+    </ChoiceGroup>
+  );
+}
+
+// Lecet dan sayatan: dasar putih atau lemak terlihat → rujukan Bab 5. Luka bakar: empat pertanyaan PNPK.
+function DepthQuestions({ type, details, setDetail }) {
+  if (type === "lecet" || type === "sayatan") {
+    return (
+      <Question q={DEPTH_QUESTION} value={details.deep} onChange={(deep) => setDetail({ deep })}>
+        <ExampleImage image={DEPTH_QUESTION.image} className="max-w-60" />
+      </Question>
+    );
+  }
+  if (type !== "bakar") return null;
+  const burn = details.burn;
+  const setBurn = (patch) => setDetail({ burn: { ...burn, ...patch } });
+  const q = BURN_QUESTIONS;
+  return (
+    <>
+      <Question q={q.palms} value={burn.palms} onChange={(palms) => setDetail({ burn: { ...burn, palms }, size: BURN_PALMS_BY_ID[palms].size })} />
+      <Question q={q.blister} value={yesNo(burn.blister)} onChange={(v) => setBurn({ blister: v === "ya" })} />
+      <Question q={q.baseColor} value={burn.baseColor} onChange={(baseColor) => setBurn({ baseColor })} columns>
+        <ExampleImage image={q.baseColor.image} />
+      </Question>
+      <Question q={q.painful} value={yesNo(burn.painful)} onChange={(v) => setBurn({ painful: v === "ya" })} />
+    </>
+  );
+}
+
+const depthMissing = (type, details) => {
+  if (type === "lecet" || type === "sayatan") return [!details.deep && "dasar luka"];
+  if (type !== "bakar") return [];
+  const b = details.burn;
+  return [!b.palms && "luas", b.blister === null && "lepuh", !b.baseColor && "warna dasar", b.painful === null && "nyeri"];
+};
+
 /* ---------- Langkah 4: perawatan ---------- */
 // Penampang kulit dari bab pustaka, di atas daftar langkah (PRD tahap 2, F3).
 function CareFigure({ type }) {
@@ -265,7 +333,15 @@ export default function Guide() {
   const [step, setStep] = useState(0);
   const [flags, setFlags] = useState([]);
   const [type, setType] = useState(presetType);
-  const [details, setDetails] = useState({ who: "dewasa", area: "", condition: "", size: "", diabetes: false });
+  const [details, setDetails] = useState({
+    who: "dewasa",
+    area: "",
+    condition: "",
+    size: "",
+    diabetes: false,
+    deep: "",
+    burn: EMPTY_BURN,
+  });
   const [done, setDone] = useState({});
   const [escalation, setEscalation] = useState(null);
   const [openProduct, setOpenProduct] = useState(null);
@@ -316,7 +392,19 @@ export default function Guide() {
   const saveWound = async () => {
     setSaving(true);
     try {
-      const input = { title: save.title.trim() || guide.defaultTitle(AREA_NOUN[details.area]), type, ...details, risk: save.risk };
+      // `deep` dan `burn` mentah tidak disimpan; yang disimpan lapisan perkiraan dan hasil penilaian luka bakar.
+      const { burn } = details;
+      const rest = { ...details };
+      delete rest.deep;
+      delete rest.burn;
+      const input = {
+        title: save.title.trim() || guide.defaultTitle(AREA_NOUN[details.area]),
+        type,
+        ...rest,
+        risk: save.risk,
+        depthLayer: depthLayerFor(type, details),
+        burn: type === "bakar" ? { ...burn, degree: estimateBurn(burn).degree } : null,
+      };
       const first = {
         schema: 2,
         photo: save.photo,
@@ -350,7 +438,15 @@ export default function Guide() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [saveAfterAuth, user, loadedFor]);
 
-  const detailsReady = details.area && details.condition && details.size;
+  const missingDetails = type
+    ? [
+        !details.area && "bagian tubuh",
+        !details.condition && "kondisi luka",
+        type !== "bakar" && !details.size && "seberapa luas",
+        ...depthMissing(type, details),
+      ].filter(Boolean)
+    : [];
+  const detailsReady = missingDetails.length === 0;
   const doneCount = careSteps.filter((s) => done[s.id]).length;
 
   let content;
@@ -397,13 +493,16 @@ export default function Guide() {
           <ChoiceGroup label="Siapa yang terluka?" options={WHO_OPTIONS} value={details.who} onChange={(who) => setDetail({ who })} />
           <ChoiceGroup label="Di bagian tubuh mana?" options={AREA_OPTIONS} value={details.area} onChange={(area) => setDetail({ area })} />
           <ChoiceGroup label="Kondisi luka sekarang" options={CONDITION_OPTIONS} value={details.condition} onChange={(condition) => setDetail({ condition })} />
-          <ChoiceGroup
-            label="Seberapa luas?"
-            hint="Bandingkan dengan telapak tangan orang yang terluka."
-            options={SIZE_OPTIONS}
-            value={details.size}
-            onChange={(size) => setDetail({ size })}
-          />
+          {type !== "bakar" && (
+            <ChoiceGroup
+              label="Seberapa luas?"
+              hint="Bandingkan dengan telapak tangan orang yang terluka."
+              options={SIZE_OPTIONS}
+              value={details.size}
+              onChange={(size) => setDetail({ size })}
+            />
+          )}
+          <DepthQuestions type={type} details={details} setDetail={setDetail} />
           <div className="rounded-2xl border border-line bg-surface px-4 py-3">
             <Toggle
               label="Orang yang terluka memiliki diabetes"
@@ -418,9 +517,7 @@ export default function Guide() {
     );
     footer = (
       <>
-        <MissingHint
-          items={[!details.area && "bagian tubuh", !details.condition && "kondisi luka", !details.size && "seberapa luas"]}
-        />
+        <MissingHint items={missingDetails} />
         <Button block size="lg" onClick={toDetailsNext} disabled={!detailsReady}>
           Lihat langkah perawatan
         </Button>

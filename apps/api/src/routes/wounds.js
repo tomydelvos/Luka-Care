@@ -7,6 +7,7 @@ import {
   AREAS,
   BED_COLORS,
   CONDITIONS,
+  DEPTH_LAYERS,
   FLUID,
   FLUID_V2,
   REDNESS,
@@ -17,6 +18,7 @@ import {
   WHO,
   WOUND_TYPES,
   assessment,
+  burn,
   flag,
   healing,
   int,
@@ -43,8 +45,8 @@ wounds.post("/", async (c) => {
   const body = await readBody(c);
   const id = newId("w");
   await c.env.DB.prepare(
-    `INSERT INTO wounds (id, user_id, title, type, area, condition, size, who, diabetes, status, created_at, risk, healing, content_version)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'dipantau', ?, ?, ?, ?)`
+    `INSERT INTO wounds (id, user_id, title, type, area, condition, size, who, diabetes, status, created_at, risk, healing, content_version, depth_layer, burn)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'dipantau', ?, ?, ?, ?, ?, ?)`
   )
     .bind(
       id,
@@ -59,7 +61,9 @@ wounds.post("/", async (c) => {
       nowIso(),
       json(risk(body.risk)),
       json(healing(body.healing)),
-      text(body.contentVersion, "Versi konten", { max: 20, optional: true }) || null
+      text(body.contentVersion, "Versi konten", { max: 20, optional: true }) || null,
+      oneOf(body.depthLayer, DEPTH_LAYERS, "Lapisan perkiraan", { optional: true }),
+      json(body.type === "bakar" ? burn(body.burn) : null)
     )
     .run();
   return ok(c, await loadWound(c.env, origin(c), c.var.user.id, id), 201);

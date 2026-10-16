@@ -18,6 +18,12 @@ export const SPREAD = ["belum_ditandai", "di_dalam_garis", "melewati_garis"];
 export const LEVELS = ["pantau", "beberapa_hari", "hari_ini", "igd"];
 export const EVIDENCE = ["A", "B", "K", "F", "I"];
 
+// Pertanyaan kedalaman dan luka bakar di panduan (apps/web/src/content/depth.js).
+export const DEPTH_LAYERS = ["epidermis", "dermis_atas", "dermis_tengah", "dermis_dalam", "lemak", "otot", "tidak_diketahui"];
+export const BURN_COLORS = ["merah", "merah_muda_pucat", "merah_muda_gelap", "belang", "putih", "hitam", "tidak_yakin"];
+export const BURN_PALMS = ["koin", "kurang_1", "lebih_1"];
+export const BURN_DEGREES = ["d1", "d2s", "d2t", "d2d", "d3", "d4"];
+
 const bad = (message) => {
   throw new HttpError(422, message);
 };
@@ -78,6 +84,19 @@ export function risk(value) {
   if (value === undefined || value === null) return null;
   if (typeof value !== "object") bad("Faktor risiko harus berupa objek.");
   return { perokok: Boolean(value.perokok), imunLemah: Boolean(value.imunLemah) };
+}
+
+// Jawaban luka bakar dan perkiraan derajat yang dihitung klien (Lampiran C).
+export function burn(value) {
+  if (value === undefined || value === null) return null;
+  if (typeof value !== "object" || Array.isArray(value)) bad("Penilaian luka bakar harus berupa objek.");
+  return {
+    blister: Boolean(value.blister),
+    baseColor: oneOf(value.baseColor, BURN_COLORS, "Warna dasar luka bakar"),
+    painful: Boolean(value.painful),
+    palms: oneOf(value.palms, BURN_PALMS, "Luas luka bakar"),
+    degree: oneOf(value.degree, BURN_DEGREES, "Perkiraan derajat", { optional: true }),
+  };
 }
 
 export function email(value) {

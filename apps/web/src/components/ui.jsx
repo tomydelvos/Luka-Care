@@ -50,7 +50,7 @@ export function Button({ to, href, variant = "primary", size = "md", block, clas
 }
 
 /* ---------- Pilihan (chip) ---------- */
-export function ChoiceGroup({ label, hint, options, value, onChange, columns = false }) {
+export function ChoiceGroup({ label, hint, options, value, onChange, columns = false, children }) {
   const id = useId();
   return (
     <fieldset className="space-y-2.5">
@@ -58,6 +58,7 @@ export function ChoiceGroup({ label, hint, options, value, onChange, columns = f
         {label}
       </legend>
       {hint && <p className="-mt-1 text-sm text-muted">{hint}</p>}
+      {children}
       <div className={cx("flex flex-wrap gap-2", columns && "sm:grid sm:grid-cols-2")} role="radiogroup" aria-labelledby={id}>
         {options.map((opt) => {
           const selected = value === opt.id;
@@ -69,13 +70,17 @@ export function ChoiceGroup({ label, hint, options, value, onChange, columns = f
               aria-checked={selected}
               onClick={() => onChange(opt.id)}
               className={cx(
-                "min-h-11 rounded-full border px-4 py-2 text-left text-[15px] font-medium transition-colors",
+                "min-h-11 border px-4 py-2 text-left text-[15px] font-medium transition-colors",
+                opt.description ? "rounded-2xl" : "rounded-full",
                 selected
                   ? "border-pine bg-pine text-on-pine"
                   : "border-line bg-surface text-ink hover:border-muted"
               )}
             >
               {opt.label}
+              {opt.description && (
+                <span className={cx("block text-[13px] font-normal", selected ? "text-on-pine/85" : "text-muted")}>{opt.description}</span>
+              )}
             </button>
           );
         })}

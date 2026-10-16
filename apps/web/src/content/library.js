@@ -886,6 +886,7 @@ export const CHAPTER_FOR_REASON = Object.fromEntries(
     tusuk: "luka-tusuk",
     "bakar-berat": "luka-bakar-berat",
     "bakar-sensitif": "luka-bakar-berat",
+    "bakar-dalam": "luka-bakar-berat",
     "bakar-bayi": "luka-bakar-ringan",
     infeksi: "luka-terinfeksi",
   }).map(([reason, slug]) => [reason, CHAPTER_BY_SLUG[slug]])
@@ -896,4 +897,14 @@ export function chapterFigure(chapter) {
   const img = chapter.nodes.find((n) => n.type === "img" && n.src.endsWith(`${chapter.illustration}.png`));
   const [top, section] = img.alt.split(" Penampang: ");
   return { src: img.src, altTop: top, altSection: section ? `Penampang: ${section}` : null };
+}
+
+// Langkah pertolongan pertama bab Bagian B untuk layar rujukan (PRD tahap 2, F3).
+// Bab 10 menamai bagian ini "Yang dilakukan". Mengembalikan { steps, avoid } berupa blok bab, atau null.
+const FIRST_AID_LABELS = ["Pertolongan pertama", "Yang dilakukan"];
+export function chapterFirstAid(chapter) {
+  if (chapter?.part !== "B") return null;
+  const steps = chapter.nodes.find((n) => n.type === "section" && FIRST_AID_LABELS.includes(n.label) && n.items);
+  const avoid = chapter.nodes.find((n) => n.type === "section" && n.label === "Hindari");
+  return steps ? { steps, avoid: avoid ?? null } : null;
 }

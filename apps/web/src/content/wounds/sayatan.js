@@ -7,8 +7,9 @@ const STEPS = {
   tekan: block(
     {
       id: "tekan",
-      title: "Tekan selama 10 menit",
-      body: "Tekan luka dengan kasa atau kain bersih secara terus-menerus. Jangan diangkat untuk mengintip. Bila bisa, angkat bagian yang luka lebih tinggi dari jantung.",
+      title: "Tekan selama 5–10 menit",
+      body: "Tekan dengan kasa atau kain bersih terus-menerus selama 5–10 menit tanpa diangkat. Bila bisa, angkat bagian yang luka lebih tinggi dari jantung.",
+      tip: "Timer berjalan 10 menit. Bila darah sudah berhenti lebih awal, Anda boleh lanjut ke langkah berikutnya.",
       timer: 600,
       check: { question: "Setelah 10 menit, darah masih mengalir?", escalateTo: "perdarahan" },
     },
@@ -26,8 +27,8 @@ const STEPS = {
     {
       id: "cek-tepi",
       title: "Periksa tepi luka",
-      body: "Sayatan kecil biasanya menutup rapat dengan sendirinya. Luka yang dalam atau tepinya terbuka lebar mungkin perlu dijahit.",
-      check: { question: "Tepi luka terbuka lebar atau lukanya dalam?", escalateTo: "dalam" },
+      body: "Sayatan kecil biasanya menutup rapat dengan sendirinya. Luka yang dalam, tepinya terbuka lebar, atau panjangnya lebih dari 5 cm mungkin perlu dijahit.",
+      check: { question: "Tepi luka terbuka lebar, lukanya dalam, atau lebih panjang dari 5 cm?", escalateTo: "dalam" },
     },
     { sources: ["nhs-cuts", "healthdirect-wounds", "aafp-laceration-2008"], evidence: "A" }
   ),

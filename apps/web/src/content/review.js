@@ -8,6 +8,7 @@ import { CAUTIONS, ESCALATIONS } from "./assessment";
 import * as CHECKIN from "./checkin";
 import * as HEALING from "./healing";
 import { CASE_STORIES } from "./caseStories";
+import * as DEPTH from "./depth";
 import { CHAPTERS, LIBRARY_INTRO, WOUND_COLORS } from "./library";
 
 const CONTENT = {
@@ -20,6 +21,7 @@ const CONTENT = {
   escalations: ESCALATIONS,
   cautions: CAUTIONS,
   checkin: { ...CHECKIN },
+  depth: { ...DEPTH },
   healing: { ...HEALING },
   caseStories: CASE_STORIES,
   libraryIntro: LIBRARY_INTRO,

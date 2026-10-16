@@ -28,5 +28,15 @@ export {
   LIBRARY_PARTS,
   WOUND_COLORS,
   chapterFigure,
+  chapterFirstAid,
 } from "./library";
+export {
+  BLISTER_RULE,
+  BURN_DEGREES,
+  BURN_PALMS_BY_ID,
+  BURN_QUESTIONS,
+  DEPTH_QUESTION,
+  depthLayerFor,
+  estimateBurn,
+} from "./depth";
 export * from "./options";

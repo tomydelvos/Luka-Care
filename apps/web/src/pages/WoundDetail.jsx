@@ -179,7 +179,7 @@ export default function WoundDetail({ id }) {
         </div>
       )}
 
-      {active && assessment.plan && <HealingPanel plan={assessment.plan} className="mt-4" />}
+      {active && assessment.plan && <HealingPanel plan={assessment.plan} burn={wound.burn} className="mt-4" />}
 
       <div className="mt-6 grid gap-4 lg:grid-cols-2">
         <Panel title="Perubahan luka" id="perubahan">

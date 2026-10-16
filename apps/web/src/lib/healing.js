@@ -5,7 +5,7 @@ import { dayNumber } from "./format";
 
 const ROW_BY_ID = Object.fromEntries(Object.values(ROWS).map((r) => [r.id, r]));
 
-// Baris Lampiran A untuk luka ini. `wound.burn.degree` diisi pertanyaan kedalaman di M4.
+// Baris Lampiran A untuk luka ini. `wound.burn.degree` berasal dari estimateBurn (content/depth.js).
 export function healingRowFor(wound) {
   if (wound.healing?.rowId && ROW_BY_ID[wound.healing.rowId]) return ROW_BY_ID[wound.healing.rowId];
   switch (wound.type) {
@@ -16,8 +16,8 @@ export function healingRowFor(wound) {
     case "lepuh":
       return ROWS.lepuh;
     case "bakar":
-      if (wound.burn?.degree === 1) return ROWS.bakarDerajat1;
-      if (wound.burn?.degree === 2) return ROWS.bakarDerajat2;
+      if (wound.burn?.degree === "d1") return ROWS.bakarDerajat1;
+      if (wound.burn?.degree === "d2s") return ROWS.bakarDerajat2;
       return ROWS.bakarBelumDiketahui;
     default:
       return null;
