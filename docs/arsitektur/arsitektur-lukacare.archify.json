@@ -1,0 +1,327 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Arsitektur LukaCare",
+    "output": "docs/arsitektur/arsitektur-lukacare.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/tomydelvos/luka-care",
+      "provider": "github",
+      "link_mode": "web",
+      "revision": "8b6cc7f1fce2d88f9aaadbcdaeebdcc0567952ee"
+    }
+  },
+  "components": [
+    {
+      "id": "pengguna",
+      "type": "external",
+      "icon": "person",
+      "label": "Pengguna",
+      "sublabel": "ponsel atau laptop",
+      "pos": [
+        40,
+        240
+      ],
+      "size": [
+        120,
+        60
+      ]
+    },
+    {
+      "id": "browser",
+      "type": "frontend",
+      "label": "Browser pengguna",
+      "sublabel": "React SPA hasil build Vite",
+      "pos": [
+        300,
+        230
+      ],
+      "size": [
+        170,
+        80
+      ],
+      "sources": [
+        {
+          "path": "apps/web/src/services/http.js",
+          "line": 1,
+          "end_line": 16,
+          "label": "fetch ke API_URL + Bearer token"
+        },
+        {
+          "path": "apps/web/src/config/env.js",
+          "line": 4,
+          "end_line": 6,
+          "label": "API_URL dan USE_MOCK_API"
+        }
+      ]
+    },
+    {
+      "id": "penyimpanan_lokal",
+      "type": "database",
+      "label": "localStorage",
+      "sublabel": "prefix lukacare: · mode contoh",
+      "pos": [
+        300,
+        430
+      ],
+      "size": [
+        170,
+        70
+      ],
+      "sources": [
+        {
+          "path": "apps/web/src/lib/storage.js",
+          "line": 1,
+          "end_line": 24,
+          "label": "baca/tulis localStorage"
+        },
+        {
+          "path": "apps/web/src/services/woundService.js",
+          "line": 45,
+          "end_line": 68,
+          "label": "layanan luka versi mock"
+        },
+        {
+          "path": "apps/web/src/services/woundService.js",
+          "line": 141,
+          "end_line": 141,
+          "label": "pilih mock atau HTTP"
+        }
+      ]
+    },
+    {
+      "id": "web_worker",
+      "type": "cloud",
+      "label": "lukacare-web",
+      "sublabel": "Worker · static assets",
+      "tag": "lukacare.com",
+      "pos": [
+        670,
+        70
+      ],
+      "size": [
+        170,
+        70
+      ],
+      "sources": [
+        {
+          "path": "apps/web/wrangler.jsonc",
+          "line": 1,
+          "end_line": 23,
+          "label": "assets ./dist, domain lukacare.com"
+        }
+      ]
+    },
+    {
+      "id": "api_worker",
+      "type": "backend",
+      "label": "lukacare-api",
+      "sublabel": "Worker · Hono REST",
+      "tag": "api.lukacare.com",
+      "pos": [
+        670,
+        235
+      ],
+      "size": [
+        170,
+        70
+      ],
+      "sources": [
+        {
+          "path": "apps/api/src/index.js",
+          "line": 1,
+          "end_line": 37,
+          "label": "Hono, CORS, rute /auth /wounds /me"
+        },
+        {
+          "path": "apps/api/wrangler.jsonc",
+          "line": 9,
+          "end_line": 22,
+          "label": "binding DB, PHOTOS, domain API"
+        }
+      ]
+    },
+    {
+      "id": "d1",
+      "type": "database",
+      "label": "D1 · lukacare",
+      "sublabel": "akun, sesi, luka, catatan harian",
+      "pos": [
+        1000,
+        235
+      ],
+      "size": [
+        190,
+        70
+      ],
+      "sources": [
+        {
+          "path": "apps/api/wrangler.jsonc",
+          "line": 18,
+          "end_line": 20,
+          "label": "binding DB ke database lukacare"
+        },
+        {
+          "path": "apps/api/migrations/0001_init.sql",
+          "line": 4,
+          "end_line": 61,
+          "label": "tabel users, sessions, wounds"
+        },
+        {
+          "path": "apps/api/src/lib/auth.js",
+          "line": 4,
+          "end_line": 11,
+          "label": "sesi 30 hari disimpan di D1"
+        }
+      ]
+    },
+    {
+      "id": "r2",
+      "type": "database",
+      "label": "R2 · lukacare-photos",
+      "sublabel": "foto luka · bucket privat",
+      "pos": [
+        670,
+        430
+      ],
+      "size": [
+        170,
+        70
+      ],
+      "sources": [
+        {
+          "path": "apps/api/src/lib/photos.js",
+          "line": 5,
+          "end_line": 45,
+          "label": "URL bertanda tangan ke R2"
+        },
+        {
+          "path": "apps/web/src/services/woundService.js",
+          "line": 108,
+          "end_line": 116,
+          "label": "browser PUT foto langsung"
+        },
+        {
+          "path": "apps/api/wrangler.jsonc",
+          "line": 21,
+          "end_line": 21,
+          "label": "binding PHOTOS"
+        }
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "Perangkat pengguna",
+      "wraps": [
+        "browser",
+        "penyimpanan_lokal"
+      ]
+    },
+    {
+      "kind": "region",
+      "label": "Cloudflare · direncanakan, belum di-deploy",
+      "wraps": [
+        "web_worker",
+        "api_worker",
+        "d1",
+        "r2"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "buka-situs",
+      "from": "pengguna",
+      "to": "browser",
+      "label": "buka lukacare.com",
+      "variant": "emphasis"
+    },
+    {
+      "id": "unduh-aset",
+      "from": "browser",
+      "to": "web_worker",
+      "label": "unduh halaman & JS",
+      "fromSide": "top",
+      "toSide": "left"
+    },
+    {
+      "id": "panggil-api",
+      "from": "browser",
+      "to": "api_worker",
+      "label": "REST JSON · Bearer token",
+      "variant": "emphasis"
+    },
+    {
+      "id": "query-d1",
+      "from": "api_worker",
+      "to": "d1",
+      "label": "SQL lewat binding DB",
+      "variant": "emphasis"
+    },
+    {
+      "id": "foto-langsung",
+      "from": "browser",
+      "to": "r2",
+      "label": "PUT/GET foto · URL bertanda tangan",
+      "variant": "security",
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "cek-hapus-foto",
+      "from": "api_worker",
+      "to": "r2",
+      "label": "cek & hapus objek",
+      "variant": "dashed"
+    },
+    {
+      "id": "mode-contoh",
+      "from": "browser",
+      "to": "penyimpanan_lokal",
+      "label": "mode contoh",
+      "variant": "dashed"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "rose",
+      "title": "Status deploy (16 Okt 2026)",
+      "items": [
+        "Akun Cloudflare yang terhubung: 0 Worker, 0 database D1, R2 belum diaktifkan",
+        "database_id di apps/api/wrangler.jsonc masih nol",
+        "Build staging dan production masih mode contoh (VITE_USE_MOCK_API=true), jadi data tersimpan di localStorage"
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "Mode development di Mac",
+      "items": [
+        "Web di localhost:3001, API di localhost:8787 lewat wrangler dev",
+        "D1 dan R2 disimulasikan secara lokal oleh Wrangler",
+        "Tanpa kunci R2, foto lewat URL HMAC ke Worker sendiri (/uploads/direct, /files)"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Perlindungan data",
+      "items": [
+        "Kata sandi di-hash PBKDF2-SHA256, 100.000 iterasi",
+        "Token sesi disimpan sebagai hash dan berlaku 30 hari",
+        "URL unggah foto berlaku 10 menit, URL lihat 1 jam",
+        "API hanya menerima origin di ALLOWED_ORIGINS"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Belum siap production",
+      "items": [
+        "Belum ada penyedia email: kode verifikasi hanya ditulis ke log Worker",
+        "Konten medis ada di src/content, ikut ter-build di SPA, dan masih draf",
+        "Lokasi D1 dan R2 perlu dipilih (Asia-Pasifik) dan dicek terhadap UU PDP"
+      ]
+    }
+  ]
+}
