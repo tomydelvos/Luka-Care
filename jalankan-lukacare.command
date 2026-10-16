@@ -61,7 +61,7 @@ fi
 
 echo ""
 echo "LukaCare berjalan. Browser akan terbuka otomatis."
-echo "Masuk dengan akun demo: demo@lukacare.test / lukacare123"
+echo "Masuk dengan akun demo: demo@lukacare.test / lukacare123 (sudah berisi 3 contoh luka di menu Pantau)"
 echo "Kode verifikasi untuk akun baru tampil di layar (dan di apps/api/.wrangler-dev.log)."
 echo "Biarkan jendela ini terbuka. Tekan Ctrl+C untuk berhenti (API ikut berhenti)."
 echo ""

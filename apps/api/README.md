@@ -9,7 +9,7 @@ cd apps/api
 npm ci
 cp .dev.vars.example .dev.vars   # isi FILE_SIGNING_SECRET, biarkan PUBLIC_API_URL=http://localhost:8787
 npm run db:migrate:local
-npm run db:seed:local            # akun demo terverifikasi: demo@lukacare.test / lukacare123
+npm run db:seed:local            # akun demo terverifikasi: demo@lukacare.test / lukacare123, plus 3 contoh luka (dibuat ulang bila terhapus, selama akun demo belum punya luka buatan sendiri)
 npm run dev                      # http://localhost:8787
 ```
 

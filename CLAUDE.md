@@ -25,7 +25,7 @@ cd apps/api
 npm ci
 cp .dev.vars.example .dev.vars
 npm run db:migrate:local
-npm run db:seed:local    # akun demo: demo@lukacare.test / lukacare123
+npm run db:seed:local    # akun demo: demo@lukacare.test / lukacare123, dengan 3 contoh luka
 npm run dev              # http://localhost:8787
 npm test                 # Vitest di runtime Workers (D1 + R2 lokal)
 ```
@@ -37,7 +37,7 @@ Web dan API sama-sama punya test Vitest; web juga punya ESLint. `npm run build` 
 - Frontend React 19 + Vite 7 + Tailwind CSS v4 di `apps/web`, semua halaman sudah ada (lihat tabel rute di README).
 - Development memakai API lokal (`VITE_USE_MOCK_API=false` di `.env.development`); staging dan production masih mock (`true`) sampai API di-deploy. Di mode mock, luka dan akun disimpan di `localStorage` (prefix `lukacare:`). Keranjang selalu di `localStorage`.
 - Di mode API: sesi yang ditolak server (401) otomatis dihapus dan pengguna diminta masuk lagi (`SESSION_EXPIRED_EVENT` di `services/http.js`); unduh/hapus data memakai `services/accountService.js` (`GET /me/export`, `DELETE /me`); tombol data contoh hanya ada di mode mock.
-- Akun baru wajib verifikasi email dengan kode 6 digit (`POST /auth/verify`, form `VerifyEmailForm` di `pages/Auth.jsx`). Belum ada penyedia email: di dev lokal kode tampil di layar (`DEV_EXPOSE_CODES=true`). Akun demo lokal `demo@lukacare.test` / `lukacare123` dibuat oleh `npm run db:seed:local` (dijalankan otomatis oleh `jalankan-lukacare.command`).
+- Akun baru wajib verifikasi email dengan kode 6 digit (`POST /auth/verify`, form `VerifyEmailForm` di `pages/Auth.jsx`). Belum ada penyedia email: di dev lokal kode tampil di layar (`DEV_EXPOSE_CODES=true`). Akun demo lokal `demo@lukacare.test` / `lukacare123` beserta 3 contoh luka (luka bakar hari ke-2, lecet yang perlu diperiksakan hari ini, sayatan yang lewat batas periksa) dibuat oleh `npm run db:seed:local` (dijalankan otomatis oleh `jalankan-lukacare.command`).
 - Checkout masih demo, tanpa pembayaran sungguhan.
 - Menyimpan luka untuk dipantau butuh akun: di langkah 6 `/panduan`, pengguna yang belum masuk diminta daftar atau masuk lewat `Sheet` (form dari `pages/Auth.jsx`), lalu luka langsung disimpan. Langkah 1–5 tetap tanpa login (aturan produk no. 4).
 - Galeri foto di `/pantau/:id` (`src/components/PhotoGallery.jsx`) dibatasi `MAX_GALLERY_PHOTOS` = 3 per luka, terpisah dari foto catatan harian.
