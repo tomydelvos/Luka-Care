@@ -288,8 +288,8 @@ Sumber per aturan: MedlinePlus, IWII 2022, NHS Forth Valley, NICE NG141, Wounds 
 ```js
 // Wound (tambahan)
 {
-  depthLayer: "epidermis" | "dermis_atas" | "dermis_dalam" | "lemak" | "otot" | "tidak_diketahui",
-  burn: { blister, baseColor, painful, palms, area } | null,
+  depthLayer: "epidermis" | "dermis_atas" | "dermis_tengah" | "dermis_dalam" | "lemak" | "otot" | "tidak_diketahui",
+  burn: { blister, baseColor, painful, palms, degree } | null,  // hanya luka bakar; lihat "Catatan implementasi M4"
   risk: { diabetes, lansia, perokok, imunLemah },
   healing: { minDays, maxDays, checkByDays, evidence },  // dihitung saat simpan, dari content/healing.js
   contentVersion: "2026-10",                             // versi konten yang dipakai saat penilaian
@@ -325,10 +325,24 @@ Keputusan yang dibuat saat implementasi dan perlu ditinjau klinisi (semuanya ber
 - **Ambang demam** di formulir menjadi 37,7 °C (tahap 1: 38 °C), mengikuti laporan riset.
 - **"Lapisan kuning terus muncul kembali"** dibaca sebagai kuning tercatat di dua catatan berturut-turut; **"bagian hitam baru"** sebagai hitam yang tidak ada di catatan sebelumnya (label I).
 - **"Lewat batas periksa tanpa tanda membaik"**: luka dianggap membaik bila catatan terakhir hanya berisi merah muda atau keropeng dan tidak ada pemicu lain (label I).
-- **Luka bakar tanpa derajat** (panduan tahap 1 belum menanyakannya) memakai batas periksa yang lebih awal, 10 hari, dan menampilkan perkiraan derajat 1 dan 2 superfisial (label I). Setelah M4 menanyakan derajat, baris yang tepat dipakai.
+- **Luka bakar tanpa derajat** (panduan tahap 1 belum menanyakannya) memakai batas periksa yang lebih awal, 10 hari, dan menampilkan perkiraan derajat 1 dan 2 superfisial (label I). Sejak M4 derajat ditanyakan di panduan; batas ini hanya untuk luka lama dan jawaban "Tidak yakin".
 - **Lecet** dipetakan dari luas: kecil → lecet ringan (7 hari), sedang atau besar → lecet lebar (14 hari).
 - **Migrasi catatan tahap 1**: selain pemetaan di F4, `swelling: true` dibaca sebagai kulit `lebih_hangat` dan `tegang_mengilap`, sehingga aturan tahap 1 "bengkak disertai nyeri bertambah" tetap berlaku.
 - **Kelompok berisiko** diambil dari diabetes dan lansia di panduan, ditambah dua tombol baru di langkah 6: perokok dan daya tahan tubuh rendah atau gizi kurang. Tampil sebagai "Periksakan lebih awal" tanpa angka.
+
+### Catatan implementasi M4
+
+Keputusan yang dibuat saat implementasi dan perlu ditinjau klinisi (semuanya berstatus `draft`):
+
+- **Warna dasar luka bakar** mengikuti tabel PNPK di Bagian C buku, dengan pilihan tambahan "Tidak yakin" (`src/content/depth.js`). Merah tanpa lepuh → derajat 1; merah muda pucat basah → derajat 2 superfisial; merah muda gelap → derajat 2 tengah; belang → derajat 2 dalam; putih → derajat 3; hitam → derajat 4.
+- **Rujukan luka bakar:** putih atau hitam memakai tanda bahaya "luka bakar luas, kimia, atau listrik" (`darurat`), sama seperti luas lebih dari satu telapak tangan. Merah muda gelap, belang, atau tidak nyeri memakai rujukan baru "luka bakar yang mungkin dalam" (`segera`). Keduanya menuju Bab 9. Merah muda gelap ikut dirujuk karena Lampiran A menyebutnya tidak untuk dirawat sendiri.
+- **Lepuh dengan warna "merah tanpa lepuh"** dibaca sebagai derajat 2 superfisial (label I).
+- **"Tidak yakin"** tidak menebak derajat: luka memakai batas periksa luka bakar tanpa derajat (10 hari) dan mendapat catatan untuk melihat ulang pada hari ke-2–3.
+- **Luas luka bakar** ditanyakan dengan telapak tangan korban (kurang dari koin, kurang dari 1 telapak, lebih dari 1 telapak) dan menggantikan pertanyaan "Seberapa luas" untuk luka bakar. Lebih dari 1 telapak selalu dirujuk untuk semua umur, sesuai tabel tanda bahaya buku, sehingga kriteria anak juga terpenuhi. Luas tubuh (`area`) tidak disimpan karena bisa dihitung dari telapak (1% per telapak); yang disimpan `palms` dan `degree`.
+- **Lapisan `dermis_tengah`** ditambahkan ke `depthLayer` untuk derajat 2 tengah.
+- **Lapisan lecet dan sayatan:** lecet kecil → epidermis, lecet sedang atau besar → dermis atas, sayatan → dermis atas, lepuh → epidermis. Dasar putih atau lemak terlihat → rujukan "luka dalam" (Bab 5).
+- **Teks langkah perawatan** disamakan dengan buku: sayatan ditekan 5–10 menit (timer 10 menit), periksa tepi termasuk panjang lebih dari 5 cm; luka bakar didinginkan 20 menit sebaiknya dalam 3 jam pertama, dengan air kemasan atau handuk basah bila tidak ada air mengalir, dan tidak memakai plester lengket langsung di atas luka.
+- **Layar rujukan** menampilkan ilustrasi tampak atas, langkah "Pertolongan pertama" (Bab 10: "Yang dilakukan"), dan "Hindari" dari bab Bagian B terkait. Alasan yang menunjuk bab yang sama digabung. Alasan tanpa bab Bagian B (pingsan, mati rasa, diabetes di kaki, luka bakar pada bayi) tetap memakai langkah singkatnya sendiri.
 
 ## Rencana rilis
 
@@ -337,7 +351,7 @@ Keputusan yang dibuat saat implementasi dan perlu ditinjau klinisi (semuanya ber
 | M1. Fondasi konten (selesai) | F1, F8, potongan ilustrasi F9, test sumber. `healing.js` dan `colors.js` dibuat di M3 bersama angkanya; tautan "Sumber" di halaman pustaka dibuat di M2 | Sedang |
 | M2. Pustaka (selesai) | F2, ilustrasi di panduan (F3 bagian kartu dan langkah). "Pustaka" sementara jadi item ke-5 di navigasi utama sampai diputuskan lewat uji kegunaan; layar rujukan baru menautkan ke bab terkait, ilustrasi dan langkah bab di layar rujukan masuk M4 | Sedang |
 | M3. Pemantauan (selesai) | F4, F5, F6, migrasi data di `localStorage` dan D1, perubahan `apps/api` (Lampiran C). Keputusan yang perlu ditinjau klinisi ada di "Catatan implementasi M3" | Besar |
-| M4. Luka bakar dan rujukan | Penilaian luka bakar dan pertanyaan kedalaman (F3), `EscalationView` bergambar | Sedang |
+| M4. Luka bakar dan rujukan (selesai) | Penilaian luka bakar dan pertanyaan kedalaman (F3), `EscalationView` bergambar. Keputusan yang perlu ditinjau klinisi ada di "Catatan implementasi M4" | Sedang |
 | M5. Tinjauan dan rilis | F10, uji kegunaan 5–8 peserta berkulit sawo matang, perbaikan, rilis staging lalu production. Rilis production dengan akun butuh API yang sudah di-deploy dan penyedia email | Sedang |
 | Berikutnya | F7, varian warna kulit (F9), F11 | — |
 

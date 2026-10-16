@@ -1,14 +1,21 @@
 import { Banner } from "./ui";
 import { ReviewRibbon, SourcesButton } from "./ContentMeta";
-import { BURN_RECHECK, EVIDENCE_NOTE, FOUR_WEEKS, HEALING_PHASES, RISK_GROUP } from "../content";
+import { BURN_DEGREES, BURN_RECHECK, EVIDENCE_NOTE, FOUR_WEEKS, HEALING_PHASES, RISK_GROUP } from "../content";
 import { formatDayDate } from "../lib/format";
 import { cx } from "../lib/cx";
 
 // Perkiraan pulih dan batas periksa (PRD tahap 2, F6). Angka ditampilkan sebagai batas periksa, bukan tanggal sembuh.
-export function HealingPanel({ plan, className }) {
+export function HealingPanel({ plan, burn, className }) {
   const { row } = plan;
   if (!row) return null;
-  const blocks = [row, FOUR_WEEKS, ...(plan.atRisk ? [RISK_GROUP] : []), ...(row.recheckDays ? [BURN_RECHECK] : [])];
+  const degree = burn?.degree ? BURN_DEGREES.labels[burn.degree] : null;
+  const blocks = [
+    row,
+    FOUR_WEEKS,
+    ...(plan.atRisk ? [RISK_GROUP] : []),
+    ...(row.recheckDays ? [BURN_RECHECK] : []),
+    ...(degree ? [BURN_DEGREES] : []),
+  ];
   return (
     <section aria-labelledby="perkiraan" className={cx("rounded-[1.5rem] border border-line bg-surface p-5", className)}>
       <div className="flex flex-wrap items-center gap-2">
@@ -22,6 +29,11 @@ export function HealingPanel({ plan, className }) {
         {row.label}
         {EVIDENCE_NOTE[row.evidence] ? `. ${EVIDENCE_NOTE[row.evidence]}.` : "."}
       </p>
+      {degree && (
+        <p className="mt-1 text-sm text-muted">
+          Perkiraan derajat: <span className="font-semibold text-ink-soft">{degree}</span>. {BURN_DEGREES.note}
+        </p>
+      )}
       <p className="mt-2 text-[15px] font-semibold text-ink">{row.estimate}</p>
       {row.note && <p className="mt-1 text-sm text-muted">{row.note}</p>}
 

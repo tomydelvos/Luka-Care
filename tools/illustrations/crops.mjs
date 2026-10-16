@@ -60,6 +60,11 @@ for (const name of WOUNDS) {
     await save(path.join(SRC, `${name}.png`), box, width, path.join(SRC, "potongan", `${name}-${panel}.webp`));
   }
 }
+// Perbandingan derajat luka bakar, utuh, sebagai gambar contoh di pertanyaan luka bakar panduan (M4).
+if (!only || "derajat".includes(only)) {
+  const info = await sharp(path.join(SRC, "derajat-luka-bakar.png")).resize({ width: 1200 }).webp({ quality: 80, effort: 6 }).toFile(path.join(SRC, "potongan", "derajat-luka-bakar.webp"));
+  console.log(`potongan/derajat-luka-bakar.webp  ${info.width}×${info.height}  ${(info.size / 1024).toFixed(1)} KB`);
+}
 if (!only || "warna".includes(only)) {
   for (const [name, box] of [...STAGES, ...DANGERS]) {
     await save(path.join(SRC, "warna-dasar-luka.png"), box, 360, path.join(SRC, "warna", `${name}.webp`));

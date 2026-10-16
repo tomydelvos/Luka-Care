@@ -1,15 +1,103 @@
 import { LuPhone, LuMapPin, LuArrowLeft } from "react-icons/lu";
 import { Button } from "./ui";
-import { CHAPTER_FOR_REASON, LEVEL_COPY } from "../content";
+import { CHAPTER_FOR_REASON, LEVEL_COPY, chapterFigure, chapterFirstAid } from "../content";
 import { Link } from "../lib/router";
-import { EMERGENCY_NUMBERS, NEAREST_FACILITY_URL } from "../config/env";
+import { EMERGENCY_NUMBERS, NEAREST_FACILITY_URL, assetUrl } from "../config/env";
 import { cx } from "../lib/cx";
 import { ReviewRibbon, SourcesButton } from "./ContentMeta";
+import { RichText } from "./RichText";
+
+// Alasan yang menunjuk bab Bagian B yang sama digabung, agar langkah bab tidak tampil dua kali.
+function groupReasons(reasons) {
+  const groups = [];
+  for (const reason of reasons) {
+    const chapter = CHAPTER_FOR_REASON[reason.id] ?? null;
+    const firstAid = chapterFirstAid(chapter);
+    const existing = firstAid && groups.find((g) => g.chapter === chapter);
+    if (existing) existing.reasons.push(reason);
+    else groups.push({ chapter, firstAid, reasons: [reason] });
+  }
+  return groups;
+}
+
+function StepList({ steps }) {
+  return (
+    <ol className="mt-3 space-y-2">
+      {steps.map((step, i) => (
+        <li key={step} className="flex gap-3 text-[15px] text-ink-soft">
+          <span className="tabular mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full bg-sunken text-xs font-bold text-ink">
+            {i + 1}
+          </span>
+          <span>
+            <RichText text={step} />
+          </span>
+        </li>
+      ))}
+    </ol>
+  );
+}
+
+function ChapterLink({ chapter }) {
+  return (
+    <Link to={`/pustaka/${chapter.slug}`} className="mt-1 inline-flex min-h-11 items-center text-sm font-semibold text-pine">
+      Baca Bab {chapter.number}: {chapter.title.toLowerCase()}
+    </Link>
+  );
+}
+
+function ReasonGroup({ group }) {
+  const { chapter, firstAid, reasons } = group;
+  const fig = firstAid ? chapterFigure(chapter) : null;
+  return (
+    <div className="p-5">
+      {reasons.map((reason) => (
+        <div key={reason.id} className="mb-3 last:mb-0">
+          <p className="flex flex-wrap items-center gap-2 font-bold">
+            {reason.title} <ReviewRibbon blocks={reason} />
+          </p>
+          <p className="mt-0.5 text-sm text-muted">{reason.detail}</p>
+        </div>
+      ))}
+      {firstAid ? (
+        <>
+          <figure className="mt-4">
+            <img
+              src={assetUrl(`illustrations/potongan/${chapter.illustration}-atas.webp`)}
+              alt={fig.altTop}
+              width="720"
+              height="692"
+              loading="lazy"
+              decoding="async"
+              className="mx-auto w-full max-w-64 rounded-2xl border border-line bg-canvas"
+            />
+          </figure>
+          <p className="mt-4 flex flex-wrap items-center gap-2 text-[15px] font-bold">
+            Pertolongan pertama dari Bab {chapter.number} <ReviewRibbon blocks={firstAid.steps} />
+          </p>
+          <StepList steps={firstAid.steps.items} />
+          {firstAid.avoid && (
+            <p className="mt-3 text-sm text-muted">
+              <span className="font-semibold text-ink-soft">Hindari:</span> <RichText text={firstAid.avoid.text} />
+            </p>
+          )}
+          <ChapterLink chapter={chapter} />
+        </>
+      ) : (
+        <>
+          {chapter && <ChapterLink chapter={chapter} />}
+          <StepList steps={reasons.flatMap((r) => r.whileWaiting)} />
+        </>
+      )}
+    </div>
+  );
+}
 
 export function EscalationView({ reasons, onBack, backLabel = "Kembali" }) {
   const level = reasons.some((r) => r.level === "darurat") ? "darurat" : "segera";
   const copy = LEVEL_COPY[level];
   const urgent = level === "darurat";
+  const groups = groupReasons(reasons);
+  const chapterBlocks = groups.flatMap((g) => (g.firstAid ? [g.firstAid.steps, g.firstAid.avoid].filter(Boolean) : []));
 
   return (
     <div className="fade-in">
@@ -62,31 +150,11 @@ export function EscalationView({ reasons, onBack, backLabel = "Kembali" }) {
           <h2 id="sambil-menunggu" className="text-lg font-extrabold">
             {urgent ? "Sambil menunggu bantuan" : "Sebelum berangkat"}
           </h2>
-          <SourcesButton blocks={[copy, ...reasons]} title="Sumber langkah ini" />
+          <SourcesButton blocks={[copy, ...reasons, ...chapterBlocks]} title="Sumber langkah ini" />
         </div>
         <div className="mt-3 divide-y divide-line rounded-[1.5rem] border border-line bg-surface">
-          {reasons.map((reason) => (
-            <div key={reason.id} className="p-5">
-              <p className="flex flex-wrap items-center gap-2 font-bold">
-                {reason.title} <ReviewRibbon blocks={reason} />
-              </p>
-              <p className="mt-0.5 text-sm text-muted">{reason.detail}</p>
-              {CHAPTER_FOR_REASON[reason.id] && (
-                <Link to={`/pustaka/${CHAPTER_FOR_REASON[reason.id].slug}`} className="mt-1 inline-flex min-h-11 items-center text-sm font-semibold text-pine">
-                  Baca Bab {CHAPTER_FOR_REASON[reason.id].number}: {CHAPTER_FOR_REASON[reason.id].title.toLowerCase()}
-                </Link>
-              )}
-              <ol className="mt-3 space-y-2">
-                {reason.whileWaiting.map((step, i) => (
-                  <li key={step} className="flex gap-3 text-[15px] text-ink-soft">
-                    <span className="tabular mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full bg-sunken text-xs font-bold text-ink">
-                      {i + 1}
-                    </span>
-                    {step}
-                  </li>
-                ))}
-              </ol>
-            </div>
+          {groups.map((group) => (
+            <ReasonGroup key={group.reasons[0].id} group={group} />
           ))}
         </div>
       </section>

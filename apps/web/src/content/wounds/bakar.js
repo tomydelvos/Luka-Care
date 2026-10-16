@@ -15,7 +15,7 @@ const STEPS = {
     {
       id: "dinginkan",
       title: "Dinginkan selama 20 menit",
-      body: "Aliri dengan air mengalir bersuhu biasa. Jangan pakai es atau air es, karena bisa merusak kulit lebih jauh.",
+      body: "Alirkan air bersuhu biasa selama 20 menit, sebaiknya dalam 3 jam pertama. Jika tidak ada air mengalir, pakai air minum kemasan atau handuk basah. Jangan pakai es atau air es.",
       timer: 1200,
       tip: "Jaga bagian tubuh lain tetap hangat, terutama pada anak, agar tidak kedinginan.",
     },
@@ -41,7 +41,7 @@ const STEPS = {
     {
       id: "tutup",
       title: "Tutup dengan longgar",
-      body: "Gunakan kasa steril non-lengket atau plastik wrap bersih. Jangan dililit terlalu kencang.",
+      body: "Tutup longgar dengan plastik wrap bersih atau kasa non-lengket. Jangan dililit, dan jangan tempel plester lengket langsung di atas luka bakar.",
     },
     meta
   ),

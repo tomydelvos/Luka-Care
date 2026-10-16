@@ -10,7 +10,7 @@ import { apiFetch } from "./http";
 //   area, condition, size, who, diabetes,
 //   risk: { perokok, imunLemah },                     (tahap 2)
 //   healing: { rowId, checkByDays, evidence },        (tahap 2, lib/healing.js healingSnapshot)
-//   contentVersion, depthLayer, burn,                 (tahap 2; depthLayer dan burn diisi di M4)
+//   contentVersion, depthLayer, burn: { blister, baseColor, painful, palms, degree } | null   (tahap 2; content/depth.js)
 //   status: "dipantau"|"sembuh", createdAt, healedAt,
 //   checkins: Checkin[],
 //   photos: Photo[]          (galeri, maks. MAX_GALLERY_PHOTOS)

@@ -4,6 +4,7 @@
 // Bukan diagnosis: hanya mencocokkan isian pengguna dengan aturan umum.
 import { block } from "./meta";
 import { RED_FLAG_BY_ID } from "./redFlags";
+import { estimateBurn } from "./depth";
 
 const cool = "Aliri dengan air mengalir bersuhu biasa selama 20 menit.";
 const looseCover = "Tutup longgar dengan kasa non-lengket atau plastik wrap bersih, lalu berangkat.";
@@ -29,6 +30,17 @@ export const ESCALATIONS = {
       whileWaiting: [cool, "Jaga tubuh bayi tetap hangat selama mendinginkan luka.", looseCover],
     },
     burnMeta
+  ),
+  bakarDalam: block(
+    {
+      id: "bakar-dalam",
+      level: "segera",
+      title: "Luka bakar yang mungkin dalam",
+      detail:
+        "Berdasarkan jawaban Anda, kulit mungkin rusak sampai lapisan dalam: dasarnya merah muda gelap atau belang, atau tidak terasa nyeri. Luka seperti ini perlu ditangani tenaga kesehatan, berapa pun luasnya.",
+      whileWaiting: [cool, looseCover],
+    },
+    { sources: ["pnpk-burns", "statpearls-burn", "aafp-burns-2020"], evidence: "B" }
   ),
   diabetesKaki: block(
     {
@@ -56,6 +68,13 @@ export const CAUTIONS = {
   bakarAnakLansia: block(
     { id: "bakar-anak-lansia", text: "Pada anak dan lansia, periksakan jika luka melepuh atau nyeri tidak mereda." },
     burnMeta
+  ),
+  bakarBelumYakin: block(
+    {
+      id: "bakar-belum-yakin",
+      text: "Warna dasar belum diketahui. Lihat lagi pada hari ke-2–3, karena luka bakar bisa bertambah dalam. Jika bagian tengahnya putih, belang, atau tidak terasa nyeri, periksakan.",
+    },
+    { sources: ["pnpk-burns", "aafp-burns-2020", "hyland-2013"], evidence: "B" }
   ),
   diabetes: block(
     {
@@ -90,10 +109,18 @@ export const CAUTIONS = {
 export function assessDetails(type, details) {
   const escalations = [];
   const cautions = [];
-  const { who, area, size, diabetes } = details;
+  const { who, area, size, diabetes, deep, burn } = details;
+
+  // Lecet atau sayatan dengan dasar putih atau lemak terlihat: rujukan Bab 5 (luka dalam).
+  if ((type === "lecet" || type === "sayatan") && deep === "ya") escalations.push(RED_FLAG_BY_ID.dalam);
 
   if (type === "bakar") {
-    if (size === "besar") escalations.push(RED_FLAG_BY_ID["bakar-berat"]);
+    const estimate = estimateBurn(burn);
+    // Putih atau hangus sama dengan tanda bahaya luka bakar berat; luas lebih dari telapak tangan juga.
+    const severe = size === "besar" || burn?.baseColor === "putih" || burn?.baseColor === "hitam";
+    if (severe) escalations.push(RED_FLAG_BY_ID["bakar-berat"]);
+    else if (estimate.deep) escalations.push(ESCALATIONS.bakarDalam);
+    if (burn?.baseColor === "tidak_yakin" && !estimate.deep) cautions.push(CAUTIONS.bakarBelumYakin);
     if (area === "wajah" || area === "kelamin") escalations.push(ESCALATIONS.bakarSensitif);
     if (who === "bayi") escalations.push(ESCALATIONS.bakarBayi);
     if (area === "tangan" || area === "kaki") cautions.push(CAUTIONS.bakarTanganKaki);

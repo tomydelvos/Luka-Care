@@ -42,7 +42,7 @@ Semua respons berbentuk `{ success: true, data }` atau `{ success: false, messag
 | GET | `/me` | Profil pengguna |
 | GET | `/me/export` | Semua data pengguna (unduh data, UU PDP) |
 | DELETE | `/me` | Hapus akun, luka, catatan, sesi, dan foto di R2 |
-| GET / POST | `/wounds` | Daftar luka (dengan `checkins` dan `photos`) / buat luka |
+| GET / POST | `/wounds` | Daftar luka (dengan `checkins` dan `photos`) / buat luka. Tahap 2: `risk`, `healing`, `contentVersion`, `depthLayer`, dan `burn` (`{ blister, baseColor, painful, palms, degree }`, hanya untuk luka bakar) |
 | PATCH / DELETE | `/wounds/:id` | Ubah (judul, status, healedAt, …) / hapus beserta fotonya |
 | POST | `/wounds/:id/examinations` | Catatan harian → `wound_examinations`. `schema: 2` memakai isian tahap 2 (`bedColors`, `fluid`, `newOdor`, `skin`, `spread`, `burnWorse`, `assessment`); tanpa `schema` memakai format tahap 1. Keduanya bisa bercampur di satu luka |
 | POST | `/wounds/:id/photos` | Galeri `{ src }`, maksimal 3 → `wound_photos` |
