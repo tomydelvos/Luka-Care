@@ -24,6 +24,7 @@ lukacare/
 │       ├── vite.config.js    dev server di port 3001, Vitest, gerbang konten production
 │       └── wrangler.jsonc    deploy ke Cloudflare (lukacare.com & staging)
 ├── docs/
+│   ├── arsitektur/           diagram arsitektur (archify): browser → Worker → D1 dan R2
 │   ├── prd-tahap-2.md        PRD tahap 2: konten berbasis riset di web
 │   ├── buku-panduan/         Buku Panduan Perawatan Luka Luar (markdown)
 │   ├── riset/                laporan riset warna luka dan waktu pulih + catatan
