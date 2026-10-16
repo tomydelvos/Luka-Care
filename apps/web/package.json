@@ -12,6 +12,7 @@
     "preview": "vite preview",
     "lint": "eslint .",
     "test": "vitest run",
+    "review:list": "vite-node scripts/review-list.mjs",
     "deploy:staging": "npm run build:staging && wrangler deploy --env staging",
     "deploy:production": "npm run build:production && wrangler deploy"
   },
