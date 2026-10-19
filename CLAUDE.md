@@ -97,7 +97,7 @@ Web dan API sama-sama punya test Vitest; web juga punya ESLint. `npm run build` 
 - [ ] Deploy API ke staging/production, lalu set `VITE_USE_MOCK_API=false` di `.env.staging` dan `.env.production`
 - [ ] Ganti katalog contoh dengan data mitra apotek, integrasi pembayaran
 - [ ] Pengingat harian (Web Push) untuk catat kondisi luka
-- [ ] GitHub Actions: deploy staging otomatis dari `main`
+- [x] GitHub Actions: deploy staging otomatis dari `main` (`.github/workflows/deploy-staging.yml`, butuh secret `CLOUDFLARE_API_TOKEN` dan `CLOUDFLARE_ACCOUNT_ID`; API belum ikut)
 
 ## Riwayat
 
