@@ -1,0 +1,52 @@
+name: CI
+
+# Jalan di setiap PR dan setiap push ke branch mana pun,
+# jadi semua branch ikut dites, bukan hanya main.
+on:
+  pull_request:
+  push:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  web:
+    name: Web (lint, test, build staging)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+      - run: npm ci
+      - name: Lint
+        run: npm run lint
+      - name: Test
+        run: npm test
+      # build:production sengaja tidak dijalankan: build itu gagal selama
+      # konten medis masih draft (gerbang di vite.config.js).
+      - name: Build staging
+        run: npm run build:staging
+
+  api:
+    name: API (test)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/api
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: apps/api/package-lock.json
+      - run: npm ci
+      - name: Test (Vitest di runtime Workers, D1 + R2 lokal)
+        run: npm test
