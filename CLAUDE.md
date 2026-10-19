@@ -30,7 +30,7 @@ npm run dev              # http://localhost:8787
 npm test                 # Vitest di runtime Workers (D1 + R2 lokal)
 ```
 
-Web dan API sama-sama punya test Vitest; web juga punya ESLint. `npm run build` memakai mode production, jadi ikut tertahan gerbang konten; untuk mengecek build sehari-hari pakai `npm run build:staging`. Kalau menambahkan tooling, tambahkan juga script-nya di `package.json` dan perbarui bagian ini.
+Web dan API sama-sama punya test Vitest; web juga punya ESLint. GitHub Actions (`.github/workflows/ci.yml`) menjalankan lint, test, dan `build:staging` untuk web serta test untuk API di setiap push dan PR; jika menambah script pemeriksaan, tambahkan juga ke workflow itu. `npm run build` memakai mode production, jadi ikut tertahan gerbang konten; untuk mengecek build sehari-hari pakai `npm run build:staging`. Kalau menambahkan tooling, tambahkan juga script-nya di `package.json` dan perbarui bagian ini.
 
 ## Status saat ini
 
