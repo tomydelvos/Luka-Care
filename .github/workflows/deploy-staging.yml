@@ -1,0 +1,74 @@
+name: Deploy staging
+
+# Deploy web ke https://staging.lukacare.com setelah workflow "CI" sukses di main.
+# Production (lukacare.com) tetap manual: build production tertahan sampai
+# konten medis ditinjau klinisi (lihat vite.config.js).
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+# Satu deploy pada satu waktu; deploy yang sedang jalan tidak dibatalkan.
+concurrency:
+  group: deploy-staging
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  web:
+    name: Deploy web ke staging
+    # Dari workflow_run: hanya jika CI sukses dan berasal dari push ke main
+    # (bukan dari PR). Dari tombol manual: selalu jalan.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.event == 'push')
+    runs-on: ubuntu-latest
+    environment:
+      name: staging
+      url: https://staging.lukacare.com
+    defaults:
+      run:
+        working-directory: apps/web
+    steps:
+      - name: Cek secret Cloudflare
+        id: secrets
+        working-directory: .
+        env:
+          TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          if [ -z "$TOKEN" ] || [ -z "$ACCOUNT" ]; then
+            echo "::warning title=Deploy staging dilewati::Isi CLOUDFLARE_API_TOKEN dan CLOUDFLARE_ACCOUNT_ID di Settings → Secrets and variables → Actions."
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      # Deploy commit yang sama persis dengan yang sudah dites CI.
+      - uses: actions/checkout@v4
+        if: steps.secrets.outputs.ready == 'true'
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+      - uses: actions/setup-node@v4
+        if: steps.secrets.outputs.ready == 'true'
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+
+      - name: Install dependensi
+        if: steps.secrets.outputs.ready == 'true'
+        run: npm ci
+
+      - name: Build staging dan deploy (wrangler --env staging)
+        if: steps.secrets.outputs.ready == 'true'
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: npm run deploy:staging

@@ -142,6 +142,17 @@ npm run deploy:production    # → https://lukacare.com
 
 `wrangler.jsonc` memakai `not_found_handling: "single-page-application"` agar rute seperti `/pantau/abc` tidak 404 saat di-refresh. Zone `lukacare.com` harus sudah aktif di akun Cloudflare.
 
+### Deploy staging otomatis (GitHub Actions)
+
+`.github/workflows/deploy-staging.yml` menjalankan `npm run deploy:staging` setiap kali workflow CI sukses di `main`, dan bisa dijalankan manual dari tab Actions (Deploy staging → Run workflow). Riwayatnya terlihat di tab Deployments, environment `staging`.
+
+Isi dua secret di Settings → Secrets and variables → Actions:
+
+- `CLOUDFLARE_API_TOKEN`: token dengan template *Edit Cloudflare Workers*
+- `CLOUDFLARE_ACCOUNT_ID`: Account ID akun Cloudflare
+
+Selama secret belum diisi, deploy dilewati dengan peringatan (tidak gagal). Production tetap manual dan API (`apps/api`) belum ikut di-deploy otomatis.
+
 ### Opsi B: Cloudflare Pages
 
 Hubungkan repo GitHub, lalu isi:
